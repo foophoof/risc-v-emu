@@ -2,15 +2,16 @@ use std::fmt;
 
 use opcode::Opcode;
 use instruction::Instruction;
+use ram::RAM;
 
 pub struct CPU {
     regs: [u32; 32],
     pc: u32,
-    ram: Vec<u8>,
+    ram: RAM,
 }
 
 impl CPU {
-    pub fn new(ram: Vec<u8>) -> CPU {
+    pub fn new(ram: RAM) -> CPU {
         let mut regs = [0; 32];
         regs[2] = 1020 * 1024; // Stack Pointer
 
@@ -129,32 +130,23 @@ impl CPU {
                     0b000 => {
                         // LB
                         self.regs[instr.rd().unwrap() as usize] =
-                            self.ram[addr as usize] as i8 as i32 as u32;
+                            self.ram[addr] as i8 as i32 as u32;
                     }
                     0b001 => {
                         // LH
-                        self.regs[instr.rd().unwrap() as usize] =
-                            ((self.ram[addr as usize] as i16) |
-                             (self.ram[(addr as usize) + 1] as i16) <<
-                             8) as i32 as u32;
+                        self.regs[instr.rd().unwrap() as usize] = self.ram.get_u16(addr) as i16 as i32 as u32;
                     }
                     0b010 => {
                         // LW
-                        self.regs[instr.rd().unwrap() as usize] =
-                            (self.ram[addr as usize] as u32) |
-                            (self.ram[(addr as usize) + 1] as u32) << 8 |
-                            (self.ram[(addr as usize) + 2] as u32) << 16 |
-                            (self.ram[(addr as usize) + 3] as u32) << 24;
+                        self.regs[instr.rd().unwrap() as usize] = self.ram.get_u32(addr);
                     }
                     0b100 => {
                         // LBU
-                        self.regs[instr.rd().unwrap() as usize] = self.ram[addr as usize] as u32;
+                        self.regs[instr.rd().unwrap() as usize] = self.ram[addr] as u32;
                     }
                     0b101 => {
                         // LHU
-                        self.regs[instr.rd().unwrap() as usize] =
-                            (self.ram[addr as usize] as u32) |
-                            (self.ram[(addr as usize) + 1] as u32) << 8;
+                        self.regs[instr.rd().unwrap() as usize] = self.ram.get_u16(addr) as u32;
                     }
                     _ => unreachable!(),
                 }
@@ -166,24 +158,15 @@ impl CPU {
                 match instr.funct3().unwrap() {
                     0b000 => {
                         // SB
-                        self.ram[addr as usize] = (rs2 & 0xFF) as u8;
-                        self.ram[(addr as usize) + 1] = 0;
-                        self.ram[(addr as usize) + 2] = 0;
-                        self.ram[(addr as usize) + 3] = 0;
+                        self.ram[addr] = rs2 as u8;
                     }
                     0b001 => {
                         // SH
-                        self.ram[addr as usize] = (rs2 & 0xFF) as u8;
-                        self.ram[(addr as usize) + 1] = ((rs2 & 0xFF00) >> 8) as u8;
-                        self.ram[(addr as usize) + 2] = 0;
-                        self.ram[(addr as usize) + 3] = 0;
+                        self.ram.set_u16(addr, rs2 as u16);
                     }
                     0b010 => {
                         // SW
-                        self.ram[addr as usize] = (rs2 & 0xFF) as u8;
-                        self.ram[(addr as usize) + 1] = ((rs2 & 0xFF00) >> 8) as u8;
-                        self.ram[(addr as usize) + 2] = ((rs2 & 0xFF0000) >> 16) as u8;
-                        self.ram[(addr as usize) + 3] = ((rs2 & 0xFF000000) >> 24) as u8;
+                        self.ram.set_u32(addr, rs2);
                     }
                     _ => unreachable!(),
                 }
@@ -380,7 +363,7 @@ impl CPU {
                                 let mut ptr = self.regs[12];
                                 let mut len = self.regs[13];
                                 while len > 0 {
-                                    print!("{}", self.ram[ptr as usize] as char);
+                                    print!("{}", self.ram[ptr] as char);
                                     ptr += 1;
                                     len -= 1;
                                 }
@@ -402,12 +385,7 @@ impl CPU {
     }
 
     fn get_instruction(&self) -> Option<Instruction> {
-        let instr_val = (self.ram[self.pc as usize] as u32) |
-                        (self.ram[(self.pc + 1) as usize] as u32) << 8 |
-                        (self.ram[(self.pc + 2) as usize] as u32) << 16 |
-                        (self.ram[(self.pc + 3) as usize] as u32) << 24;
-
-        Instruction::from_u32(instr_val)
+        Instruction::from_u32(self.ram.get_u32(self.pc))
     }
 
     pub fn get_register(&self, reg: u8) -> u32 {

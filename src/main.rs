@@ -3,13 +3,15 @@ extern crate elf;
 mod cpu;
 mod opcode;
 mod instruction;
+mod ram;
 
 use cpu::CPU;
+use ram::RAM;
 
 // use std::fs::File;
 use std::env;
 
-fn load_elf_to_ram(path: &str, ram: &mut Vec<u8>) -> u32 {
+fn load_elf_to_ram(path: &str, ram: &mut RAM) -> u32 {
     let elf_file = match elf::File::open_path(path) {
         Ok(f) => f,
         Err(e) => panic!("Error: {:?}", e),
@@ -17,7 +19,8 @@ fn load_elf_to_ram(path: &str, ram: &mut Vec<u8>) -> u32 {
 
     for section in elf_file.sections {
         for (i, &data) in section.data.as_slice().iter().enumerate() {
-            ram[(section.shdr.addr as usize) + i] = data;
+            let addr = (section.shdr.addr as u32) + (i as u32);
+            ram[addr] = data;
         }
     }
 
@@ -25,7 +28,7 @@ fn load_elf_to_ram(path: &str, ram: &mut Vec<u8>) -> u32 {
 }
 
 fn main() {
-    let mut ram: Vec<u8> = vec![0; 1024 * 1024];
+    let mut ram = RAM::new(1024 * 1024);
 
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
