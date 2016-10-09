@@ -8,3 +8,11 @@ risc-v-cpu is a RISC-V CPU emulator written in Rust.
 
 At the moment, only the RV32G ISA is supported, but support for other ISAs or
 extensions may be added in the future.
+
+## Usage
+
+You need a RISC-V toolchain to compile the test program, but then you can run a
+simple Hello, world program like this:
+
+    $ make -C test-program
+    $ cargo run ./test-program/test

@@ -11,6 +11,11 @@ pub enum Instruction {
 }
 
 impl Instruction {
+    pub fn from_u32(instr_val: u32) -> Option<Instruction> {
+        let opcode_val = (instr_val & 0x7F) as u8;
+        Opcode::from_u8(opcode_val).map(|opcode| opcode.parse_instruction(instr_val))
+    }
+
     pub fn opcode(&self) -> Option<Opcode> {
         let opcode_val = (self.data() & 0x7F) as u8;
         Opcode::from_u8(opcode_val)
@@ -92,7 +97,7 @@ impl Instruction {
         }
     }
 
-    fn data(&self) -> u32 {
+    pub fn data(&self) -> u32 {
         use instruction::Instruction::*;
         match *self {
             R(data) | I(data) | S(data) | SB(data) | U(data) | UJ(data) => data,
