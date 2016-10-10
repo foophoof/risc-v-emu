@@ -1,5 +1,5 @@
-GCC ?= riscv64-unknown-elf-gcc
-GCCFLAGS ?= -nostdlib -m32 -O0
+GCC ?= riscv32-unknown-elf-gcc
+GCCFLAGS ?= -nostdlib -O0
 
 test: test.c syscalls.c linker.ld
 	$(GCC) $(GCCFLAGS) -T linker.ld -o $@ test.c syscalls.c
