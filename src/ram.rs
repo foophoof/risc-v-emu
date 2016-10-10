@@ -6,9 +6,7 @@ pub struct RAM {
 
 impl RAM {
     pub fn new(capacity: usize) -> RAM {
-        RAM {
-            data: vec![0; capacity],
-        }
+        RAM { data: vec![0; capacity] }
     }
 
     pub fn get_u16(&self, index: u32) -> u16 {
@@ -16,9 +14,7 @@ impl RAM {
     }
 
     pub fn get_u32(&self, index: u32) -> u32 {
-        (self[index] as u32) |
-        (self[index + 1] as u32) << 8 |
-        (self[index + 2] as u32) << 16 |
+        (self[index] as u32) | (self[index + 1] as u32) << 8 | (self[index + 2] as u32) << 16 |
         (self[index + 3] as u32) << 24
     }
 
@@ -28,8 +24,8 @@ impl RAM {
     }
 
     pub fn set_u32(&mut self, index: u32, data: u32) {
-        self[index + 0] = ((data & 0x000000FF) >>  0) as u8;
-        self[index + 1] = ((data & 0x0000FF00) >>  8) as u8;
+        self[index + 0] = ((data & 0x000000FF) >> 0) as u8;
+        self[index + 1] = ((data & 0x0000FF00) >> 8) as u8;
         self[index + 2] = ((data & 0x00FF0000) >> 16) as u8;
         self[index + 3] = ((data & 0xFF000000) >> 24) as u8;
     }

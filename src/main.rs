@@ -1,7 +1,6 @@
 extern crate elf;
 
 mod cpu;
-mod opcode;
 mod instruction;
 mod ram;
 
