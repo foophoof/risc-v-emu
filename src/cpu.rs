@@ -48,7 +48,9 @@ impl CPU {
             print!("{:?}\r", self);
         }
 
-        println!("last was: {:032b} (at {:08x})", self.ram.get_u32(self.pc), self.pc);
+        println!("last was: {:032b} (at {:08x})",
+                 self.ram.get_u32(self.pc),
+                 self.pc);
     }
 
     fn get_instruction(&self) -> Option<Box<instruction::Instruction>> {
@@ -82,7 +84,7 @@ impl CPU {
 
     pub fn set_csr(&mut self, csr: u16, value: u32) {
         match csr {
-            0x780 => {},
+            0x780 => {}
             _ => panic!("write csr 0x{:03X} not implemented", csr),
         }
     }

@@ -69,37 +69,43 @@ impl Instruction for Op {
 
         let result = match self.typ {
             OperationType::Mul => operand1.wrapping_mul(operand2),
-            OperationType::MulHighSigned => (((operand1 as i32 as i64) * (operand2 as i32 as i64)) >> 32) as u32,
-            OperationType::MulHighUnsigned => (((operand1 as u64) * (operand2 as u64)) >> 32) as u32,
-            OperationType::MulHighSignedUnsigned => (((operand1 as i32 as i64) * (operand2 as i64)) >> 32) as u32,
+            OperationType::MulHighSigned => {
+                (((operand1 as i32 as i64) * (operand2 as i32 as i64)) >> 32) as u32
+            }
+            OperationType::MulHighUnsigned => {
+                (((operand1 as u64) * (operand2 as u64)) >> 32) as u32
+            }
+            OperationType::MulHighSignedUnsigned => {
+                (((operand1 as i32 as i64) * (operand2 as i64)) >> 32) as u32
+            }
             OperationType::Div => {
                 if operand2 == 0 {
                     (-1i32) as u32
                 } else {
                     (operand1 as i32).wrapping_div(operand2 as i32) as u32
                 }
-            },
+            }
             OperationType::DivUnsigned => {
                 if operand2 == 0 {
                     (-1i32) as u32
                 } else {
                     operand1 / operand2
                 }
-            },
+            }
             OperationType::Remainder => {
                 if operand2 == 0 {
                     operand1
                 } else {
                     (operand1 as i32).wrapping_rem(operand2 as i32) as u32
                 }
-            },
+            }
             OperationType::RemainderUnsigned => {
                 if operand2 == 0 {
                     operand1
                 } else {
                     operand1 % operand2
                 }
-            },
+            }
         };
 
         cpu.set_register(self.dest, result);
@@ -108,7 +114,7 @@ impl Instruction for Op {
 
 #[cfg(test)]
 mod tests {
-    use std::{i32};
+    use std::i32;
     use super::*;
     use ram::RAM;
     use cpu::CPU;
@@ -118,7 +124,8 @@ mod tests {
     fn test_mul() {
         let mut cpu = CPU::new(RAM::new(1024));
 
-        let instr = Op::parse(0b0000001_00011_00010_000_00001_0110011).expect("couldn't parse MUL x0,x1,x2");
+        let instr = Op::parse(0b0000001_00011_00010_000_00001_0110011)
+            .expect("couldn't parse MUL x0,x1,x2");
 
         macro_rules! test_mul {
             ($result:expr, $val1:expr, $val2:expr) => {
@@ -154,7 +161,8 @@ mod tests {
     fn test_mulh() {
         let mut cpu = CPU::new(RAM::new(1024));
 
-        let instr = Op::parse(0b0000001_00011_00010_001_00001_0110011).expect("couldn't parse MULH x0,x1,x2");
+        let instr = Op::parse(0b0000001_00011_00010_001_00001_0110011)
+            .expect("couldn't parse MULH x0,x1,x2");
 
         macro_rules! test_mulh {
             ($result:expr, $val1:expr, $val2:expr) => {
@@ -187,7 +195,8 @@ mod tests {
     fn test_mulhsu() {
         let mut cpu = CPU::new(RAM::new(1024));
 
-        let instr = Op::parse(0b0000001_00011_00010_010_00001_0110011).expect("couldn't parse MULHSU x0,x1,x2");
+        let instr = Op::parse(0b0000001_00011_00010_010_00001_0110011)
+            .expect("couldn't parse MULHSU x0,x1,x2");
 
         macro_rules! test_mulhsu {
             ($result:expr, $val1:expr, $val2:expr) => {
@@ -220,7 +229,8 @@ mod tests {
     fn test_mulhu() {
         let mut cpu = CPU::new(RAM::new(1024));
 
-        let instr = Op::parse(0b0000001_00011_00010_011_00001_0110011).expect("couldn't parse MULHU x0,x1,x2");
+        let instr = Op::parse(0b0000001_00011_00010_011_00001_0110011)
+            .expect("couldn't parse MULHU x0,x1,x2");
 
         macro_rules! test_mulhu {
             ($result:expr, $val1:expr, $val2:expr) => {
@@ -253,7 +263,8 @@ mod tests {
     fn test_div() {
         let mut cpu = CPU::new(RAM::new(1024));
 
-        let instr = Op::parse(0b0000001_00011_00010_100_00001_0110011).expect("couldn't parse DIV x0,x1,x2");
+        let instr = Op::parse(0b0000001_00011_00010_100_00001_0110011)
+            .expect("couldn't parse DIV x0,x1,x2");
 
         macro_rules! test_div {
             ($result:expr, $val1:expr, $val2:expr) => {
@@ -264,24 +275,25 @@ mod tests {
             }
         }
 
-        test_div!( 3,  20,   6);
-        test_div!(-3i32, -20i32,   6);
-        test_div!(-3i32,  20,  -6i32);
-        test_div!( 3, -20i32,  -6i32);
+        test_div!(3, 20, 6);
+        test_div!(-3i32, -20i32, 6);
+        test_div!(-3i32, 20, -6i32);
+        test_div!(3, -20i32, -6i32);
 
-        test_div!(i32::MIN, i32::MIN,  1);
+        test_div!(i32::MIN, i32::MIN, 1);
         test_div!(i32::MIN, i32::MIN, -1i32);
 
         test_div!(-1i32, i32::MIN, 0);
-        test_div!(-1i32,      1, 0);
-        test_div!(-1i32,      0, 0);
+        test_div!(-1i32, 1, 0);
+        test_div!(-1i32, 0, 0);
     }
 
     #[test]
     fn test_divu() {
         let mut cpu = CPU::new(RAM::new(1024));
 
-        let instr = Op::parse(0b0000001_00011_00010_101_00001_0110011).expect("couldn't parse DIVU x0,x1,x2");
+        let instr = Op::parse(0b0000001_00011_00010_101_00001_0110011)
+            .expect("couldn't parse DIVU x0,x1,x2");
 
         macro_rules! test_divu {
             ($result:expr, $val1:expr, $val2:expr) => {
@@ -292,24 +304,25 @@ mod tests {
             }
         }
 
-        test_divu!(        3,  20,     6);
-        test_divu!(715827879, -20i32,  6);
-        test_divu!(        0,  20,    -6i32);
-        test_divu!(        0, -20i32, -6i32);
+        test_divu!(3, 20, 6);
+        test_divu!(715827879, -20i32, 6);
+        test_divu!(0, 20, -6i32);
+        test_divu!(0, -20i32, -6i32);
 
-        test_divu!(i32::MIN, i32::MIN,  1);
-        test_divu!(       0, i32::MIN, -1i32);
+        test_divu!(i32::MIN, i32::MIN, 1);
+        test_divu!(0, i32::MIN, -1i32);
 
         test_divu!(-1i32, i32::MIN, 0);
-        test_divu!(-1i32,        1, 0);
-        test_divu!(-1i32,        0, 0);
+        test_divu!(-1i32, 1, 0);
+        test_divu!(-1i32, 0, 0);
     }
 
     #[test]
     fn test_rem() {
         let mut cpu = CPU::new(RAM::new(1024));
 
-        let instr = Op::parse(0b0000001_00011_00010_110_00001_0110011).expect("couldn't parse REM x0,x1,x2");
+        let instr = Op::parse(0b0000001_00011_00010_110_00001_0110011)
+            .expect("couldn't parse REM x0,x1,x2");
 
         macro_rules! test_rem {
             ($result:expr, $val1:expr, $val2:expr) => {
@@ -320,24 +333,25 @@ mod tests {
             }
         }
 
-        test_rem!( 2,     20,      6);
-        test_rem!(-2i32, -20i32,   6);
-        test_rem!( 2,     20,     -6i32);
-        test_rem!(-2i32, -20i32,  -6i32);
+        test_rem!(2, 20, 6);
+        test_rem!(-2i32, -20i32, 6);
+        test_rem!(2, 20, -6i32);
+        test_rem!(-2i32, -20i32, -6i32);
 
-        test_rem!( 0, i32::MIN,  1);
-        test_rem!( 0, i32::MIN, -1i32);
+        test_rem!(0, i32::MIN, 1);
+        test_rem!(0, i32::MIN, -1i32);
 
         test_rem!(i32::MIN, i32::MIN, 0);
-        test_rem!(       1,        1, 0);
-        test_rem!(       0,        0, 0);
+        test_rem!(1, 1, 0);
+        test_rem!(0, 0, 0);
     }
 
     #[test]
     fn test_remu() {
         let mut cpu = CPU::new(RAM::new(1024));
 
-        let instr = Op::parse(0b0000001_00011_00010_111_00001_0110011).expect("couldn't parse REMU x0,x1,x2");
+        let instr = Op::parse(0b0000001_00011_00010_111_00001_0110011)
+            .expect("couldn't parse REMU x0,x1,x2");
 
         macro_rules! test_remu {
             ($result:expr, $val1:expr, $val2:expr) => {
@@ -348,16 +362,16 @@ mod tests {
             }
         }
 
-        test_remu!(  2,     20,      6);
-        test_remu!(  2,    -20i32,   6);
-        test_remu!( 20,     20,     -6i32);
-        test_remu!(-20i32, -20i32,  -6i32);
+        test_remu!(2, 20, 6);
+        test_remu!(2, -20i32, 6);
+        test_remu!(20, 20, -6i32);
+        test_remu!(-20i32, -20i32, -6i32);
 
-        test_remu!(       0, i32::MIN,  1);
+        test_remu!(0, i32::MIN, 1);
         test_remu!(i32::MIN, i32::MIN, -1i32);
 
-        test_remu!(i32::MIN, i32::MIN, 0 );
-        test_remu!(       1,        1, 0 );
-        test_remu!(       0,        0, 0 );
+        test_remu!(i32::MIN, i32::MIN, 0);
+        test_remu!(1, 1, 0);
+        test_remu!(0, 0, 0);
     }
 }

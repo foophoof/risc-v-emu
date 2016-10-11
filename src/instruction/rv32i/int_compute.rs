@@ -172,7 +172,9 @@ impl Instruction for Op {
                              OperationType::Xor => src1 ^ src2,
                              OperationType::ShiftLeftLogical => src1 << (src2 & 0x1F),
                              OperationType::ShiftRightLogical => src1 >> (src2 & 0x1F),
-                             OperationType::ShiftRightArithmetic => ((src1 as i32) >> (src2 & 0x1F)) as u32,
+                             OperationType::ShiftRightArithmetic => {
+                                 ((src1 as i32) >> (src2 & 0x1F)) as u32
+                             }
                          });
     }
 }
@@ -317,7 +319,7 @@ mod tests {
     #[test]
     fn test_slti() {
         let mut cpu = CPU::new(RAM::new(1024));
-        
+
         test_imm_op!(cpu, 0b010, 0, 0x00000000, 0x000);
         test_imm_op!(cpu, 0b010, 0, 0x00000001, 0x001);
         test_imm_op!(cpu, 0b010, 1, 0x00000003, 0x007);
@@ -384,19 +386,19 @@ mod tests {
     fn test_srli() {
         let mut cpu = CPU::new(RAM::new(1024));
 
-        test_imm_op!(cpu, 0b101, 0x80000000 >>  0, 0x80000000, 0);
-        test_imm_op!(cpu, 0b101, 0x80000000 >>  1, 0x80000000, 1);
-        test_imm_op!(cpu, 0b101, 0x80000000 >>  7, 0x80000000, 7);
+        test_imm_op!(cpu, 0b101, 0x80000000 >> 0, 0x80000000, 0);
+        test_imm_op!(cpu, 0b101, 0x80000000 >> 1, 0x80000000, 1);
+        test_imm_op!(cpu, 0b101, 0x80000000 >> 7, 0x80000000, 7);
         test_imm_op!(cpu, 0b101, 0x80000000 >> 14, 0x80000000, 14);
         test_imm_op!(cpu, 0b101, 0x80000001 >> 31, 0x80000001, 31);
-        test_imm_op!(cpu, 0b101, 0xffffffff >>  0, 0xffffffff, 0);
-        test_imm_op!(cpu, 0b101, 0xffffffff >>  1, 0xffffffff, 1);
-        test_imm_op!(cpu, 0b101, 0xffffffff >>  7, 0xffffffff, 7);
+        test_imm_op!(cpu, 0b101, 0xffffffff >> 0, 0xffffffff, 0);
+        test_imm_op!(cpu, 0b101, 0xffffffff >> 1, 0xffffffff, 1);
+        test_imm_op!(cpu, 0b101, 0xffffffff >> 7, 0xffffffff, 7);
         test_imm_op!(cpu, 0b101, 0xffffffff >> 14, 0xffffffff, 14);
         test_imm_op!(cpu, 0b101, 0xffffffff >> 31, 0xffffffff, 31);
-        test_imm_op!(cpu, 0b101, 0x21212121 >>  0, 0x21212121, 0);
-        test_imm_op!(cpu, 0b101, 0x21212121 >>  1, 0x21212121, 1);
-        test_imm_op!(cpu, 0b101, 0x21212121 >>  7, 0x21212121, 7);
+        test_imm_op!(cpu, 0b101, 0x21212121 >> 0, 0x21212121, 0);
+        test_imm_op!(cpu, 0b101, 0x21212121 >> 1, 0x21212121, 1);
+        test_imm_op!(cpu, 0b101, 0x21212121 >> 7, 0x21212121, 7);
         test_imm_op!(cpu, 0b101, 0x21212121 >> 14, 0x21212121, 14);
         test_imm_op!(cpu, 0b101, 0x21212121 >> 31, 0x21212121, 31);
 
@@ -407,21 +409,21 @@ mod tests {
     fn test_srai() {
         let mut cpu = CPU::new(RAM::new(1024));
 
-        test_imm_op!(cpu, 0b101, 0x00000000, 0x00000000, 0  | 1 << 10);
-        test_imm_op!(cpu, 0b101, 0xc0000000, 0x80000000, 1  | 1 << 10);
-        test_imm_op!(cpu, 0b101, 0xff000000, 0x80000000, 7  | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0x00000000, 0x00000000, 0 | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0xc0000000, 0x80000000, 1 | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0xff000000, 0x80000000, 7 | 1 << 10);
         test_imm_op!(cpu, 0b101, 0xfffe0000, 0x80000000, 14 | 1 << 10);
         test_imm_op!(cpu, 0b101, 0xffffffff, 0x80000001, 31 | 1 << 10);
 
-        test_imm_op!(cpu, 0b101, 0x7fffffff, 0x7fffffff, 0  | 1 << 10);
-        test_imm_op!(cpu, 0b101, 0x3fffffff, 0x7fffffff, 1  | 1 << 10);
-        test_imm_op!(cpu, 0b101, 0x00ffffff, 0x7fffffff, 7  | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0x7fffffff, 0x7fffffff, 0 | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0x3fffffff, 0x7fffffff, 1 | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0x00ffffff, 0x7fffffff, 7 | 1 << 10);
         test_imm_op!(cpu, 0b101, 0x0001ffff, 0x7fffffff, 14 | 1 << 10);
         test_imm_op!(cpu, 0b101, 0x00000000, 0x7fffffff, 31 | 1 << 10);
 
-        test_imm_op!(cpu, 0b101, 0x81818181, 0x81818181, 0  | 1 << 10);
-        test_imm_op!(cpu, 0b101, 0xc0c0c0c0, 0x81818181, 1  | 1 << 10);
-        test_imm_op!(cpu, 0b101, 0xff030303, 0x81818181, 7  | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0x81818181, 0x81818181, 0 | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0xc0c0c0c0, 0x81818181, 1 | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0xff030303, 0x81818181, 7 | 1 << 10);
         test_imm_op!(cpu, 0b101, 0xfffe0606, 0x81818181, 14 | 1 << 10);
         test_imm_op!(cpu, 0b101, 0xffffffff, 0x81818181, 31 | 1 << 10);
 
@@ -444,10 +446,10 @@ mod tests {
     fn test_andi() {
         let mut cpu = CPU::new(RAM::new(1024));
 
-        test_imm_op!(cpu, 0b111, 0xff00ff00, 0xff00ff00, 0xf0f );
-        test_imm_op!(cpu, 0b111, 0x000000f0, 0x0ff00ff0, 0x0f0 );
-        test_imm_op!(cpu, 0b111, 0x0000000f, 0x00ff00ff, 0x70f );
-        test_imm_op!(cpu, 0b111, 0x00000000, 0xf00ff00f, 0x0f0 );
+        test_imm_op!(cpu, 0b111, 0xff00ff00, 0xff00ff00, 0xf0f);
+        test_imm_op!(cpu, 0b111, 0x000000f0, 0x0ff00ff0, 0x0f0);
+        test_imm_op!(cpu, 0b111, 0x0000000f, 0x00ff00ff, 0x70f);
+        test_imm_op!(cpu, 0b111, 0x00000000, 0xf00ff00f, 0x0f0);
 
         test_imm_src1_eq_dest!(cpu, 0b111, 0x00000000, 0xff00ff00, 0x0f0);
     }
@@ -591,21 +593,21 @@ mod tests {
     fn test_srl() {
         let mut cpu = CPU::new(RAM::new(1024));
 
-        test_rr_op!(cpu, 0b101, 0x00, 0x80000000 >> 0 , 0x80000000, 0);
-        test_rr_op!(cpu, 0b101, 0x00, 0x80000000 >> 1 , 0x80000000, 1);
-        test_rr_op!(cpu, 0b101, 0x00, 0x80000000 >> 7 , 0x80000000, 7);
+        test_rr_op!(cpu, 0b101, 0x00, 0x80000000 >> 0, 0x80000000, 0);
+        test_rr_op!(cpu, 0b101, 0x00, 0x80000000 >> 1, 0x80000000, 1);
+        test_rr_op!(cpu, 0b101, 0x00, 0x80000000 >> 7, 0x80000000, 7);
         test_rr_op!(cpu, 0b101, 0x00, 0x80000000 >> 14, 0x80000000, 14);
         test_rr_op!(cpu, 0b101, 0x00, 0x80000001 >> 31, 0x80000001, 31);
 
-        test_rr_op!(cpu, 0b101, 0x00, 0xffffffff >> 0 , 0xffffffff, 0);
-        test_rr_op!(cpu, 0b101, 0x00, 0xffffffff >> 1 , 0xffffffff, 1);
-        test_rr_op!(cpu, 0b101, 0x00, 0xffffffff >> 7 , 0xffffffff, 7);
+        test_rr_op!(cpu, 0b101, 0x00, 0xffffffff >> 0, 0xffffffff, 0);
+        test_rr_op!(cpu, 0b101, 0x00, 0xffffffff >> 1, 0xffffffff, 1);
+        test_rr_op!(cpu, 0b101, 0x00, 0xffffffff >> 7, 0xffffffff, 7);
         test_rr_op!(cpu, 0b101, 0x00, 0xffffffff >> 14, 0xffffffff, 14);
         test_rr_op!(cpu, 0b101, 0x00, 0xffffffff >> 31, 0xffffffff, 31);
 
-        test_rr_op!(cpu, 0b101, 0x00, 0x21212121 >> 0 , 0x21212121, 0);
-        test_rr_op!(cpu, 0b101, 0x00, 0x21212121 >> 1 , 0x21212121, 1);
-        test_rr_op!(cpu, 0b101, 0x00, 0x21212121 >> 7 , 0x21212121, 7);
+        test_rr_op!(cpu, 0b101, 0x00, 0x21212121 >> 0, 0x21212121, 0);
+        test_rr_op!(cpu, 0b101, 0x00, 0x21212121 >> 1, 0x21212121, 1);
+        test_rr_op!(cpu, 0b101, 0x00, 0x21212121 >> 7, 0x21212121, 7);
         test_rr_op!(cpu, 0b101, 0x00, 0x21212121 >> 14, 0x21212121, 14);
         test_rr_op!(cpu, 0b101, 0x00, 0x21212121 >> 31, 0x21212121, 31);
 
@@ -668,7 +670,7 @@ mod tests {
                 instr.execute(&mut $cpu);
 
                 let sra_amount = $sra | (1 << 10);
-                let sra_raw_instruction = ((sra_amount & 0xFFF) << 20) | (1 << 15) | (1 << 7) | 0b101 << 12 | 0x13; 
+                let sra_raw_instruction = ((sra_amount & 0xFFF) << 20) | (1 << 15) | (1 << 7) | 0b101 << 12 | 0x13;
                 let sra_instr = OpImm::parse(sra_raw_instruction).expect("couldn't parse SRA instruction");
                 sra_instr.execute(&mut cpu);
 
