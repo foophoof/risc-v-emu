@@ -172,7 +172,7 @@ impl Instruction for Op {
                              OperationType::Xor => src1 ^ src2,
                              OperationType::ShiftLeftLogical => src1 << (src2 & 0x1F),
                              OperationType::ShiftRightLogical => src1 >> (src2 & 0x1F),
-                             OperationType::ShiftRightArithmetic => ((src1 as i32) >> src2) as u32,
+                             OperationType::ShiftRightArithmetic => ((src1 as i32) >> (src2 & 0x1F)) as u32,
                          });
     }
 }
@@ -620,5 +620,40 @@ mod tests {
         test_rr_src1_eq_dest!(cpu, 0b101, 0x00, 0x01000000, 0x80000000, 7);
         test_rr_src2_eq_dest!(cpu, 0b101, 0x00, 0x00020000, 0x80000000, 14);
         test_rr_src12_eq_dest!(cpu, 0b101, 0x00, 0, 7);
+    }
+
+    #[test]
+    fn test_sra() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_rr_op!(cpu, 0b101, 0x20, 0x80000000, 0x80000000, 0);
+        test_rr_op!(cpu, 0b101, 0x20, 0xc0000000, 0x80000000, 1);
+        test_rr_op!(cpu, 0b101, 0x20, 0xff000000, 0x80000000, 7);
+        test_rr_op!(cpu, 0b101, 0x20, 0xfffe0000, 0x80000000, 14);
+        test_rr_op!(cpu, 0b101, 0x20, 0xffffffff, 0x80000001, 31);
+
+        test_rr_op!(cpu, 0b101, 0x20, 0x7fffffff, 0x7fffffff, 0);
+        test_rr_op!(cpu, 0b101, 0x20, 0x3fffffff, 0x7fffffff, 1);
+        test_rr_op!(cpu, 0b101, 0x20, 0x00ffffff, 0x7fffffff, 7);
+        test_rr_op!(cpu, 0b101, 0x20, 0x0001ffff, 0x7fffffff, 14);
+        test_rr_op!(cpu, 0b101, 0x20, 0x00000000, 0x7fffffff, 31);
+
+        test_rr_op!(cpu, 0b101, 0x20, 0x81818181, 0x81818181, 0);
+        test_rr_op!(cpu, 0b101, 0x20, 0xc0c0c0c0, 0x81818181, 1);
+        test_rr_op!(cpu, 0b101, 0x20, 0xff030303, 0x81818181, 7);
+        test_rr_op!(cpu, 0b101, 0x20, 0xfffe0606, 0x81818181, 14);
+        test_rr_op!(cpu, 0b101, 0x20, 0xffffffff, 0x81818181, 31);
+
+        // Verify that shifts only use bottom five bits
+
+        test_rr_op!(cpu, 0b101, 0x20, 0x81818181, 0x81818181, 0xffffffc0);
+        test_rr_op!(cpu, 0b101, 0x20, 0xc0c0c0c0, 0x81818181, 0xffffffc1);
+        test_rr_op!(cpu, 0b101, 0x20, 0xff030303, 0x81818181, 0xffffffc7);
+        test_rr_op!(cpu, 0b101, 0x20, 0xfffe0606, 0x81818181, 0xffffffce);
+        test_rr_op!(cpu, 0b101, 0x20, 0xffffffff, 0x81818181, 0xffffffff);
+
+        test_rr_src1_eq_dest!(cpu, 0b101, 0x20, 0xff000000, 0x80000000, 7);
+        test_rr_src2_eq_dest!(cpu, 0b101, 0x20, 0xfffe0000, 0x80000000, 14);
+        test_rr_src12_eq_dest!(cpu, 0b101, 0x20, 0, 7);
     }
 }
