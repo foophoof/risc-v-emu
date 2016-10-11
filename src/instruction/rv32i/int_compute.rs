@@ -45,7 +45,7 @@ impl OpImm {
             0b011 => ImmediateOperationType::SetLessThanUnsigned,
             0b100 => ImmediateOperationType::Xor,
             0b101 => {
-                if decoded.immediate & (1 << 31) == 0 {
+                if decoded.immediate & (1 << 10) == 0 {
                     ImmediateOperationType::ShiftRightLogical
                 } else {
                     ImmediateOperationType::ShiftRightArithmetic
@@ -231,5 +231,56 @@ impl Instruction for Auipc {
     fn execute(&self, cpu: &mut CPU) {
         let result = cpu.pc.wrapping_add(self.immediate);
         cpu.set_register(self.dest, result);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cpu::CPU;
+    use ram::RAM;
+    use instruction::Instruction;
+
+    macro_rules! test_imm_op {
+        ($cpu:expr, $op:expr, $result:expr, $val1:expr, $imm:expr) => {
+            $cpu.set_register(1, $val1);
+            let raw_instruction = (($imm & 0xFFF) << 20) | (1 << 15) | (3 << 7) | $op << 12 | 0x13;
+            let instr = OpImm::parse(raw_instruction).expect("couldn't parse instruction");
+            instr.execute(&mut $cpu);
+            assert_eq!($cpu.get_register(3), $result);
+        }
+    }
+
+    macro_rules! test_imm_src1_eq_dest {
+        ($cpu:expr, $op:expr, $result:expr, $val1:expr, $imm:expr) => {
+            $cpu.set_register(1, $val1);
+            let raw_instruction = (($imm & 0xFFF) << 20) | (1 << 15) | (0 << 12) | (1 << 7) | $op << 12 | 0x13;
+            let instr = OpImm::parse(raw_instruction).expect("couldn't parse instruction");
+            instr.execute(&mut $cpu);
+            assert_eq!($cpu.get_register(1), $result);
+        }
+    }
+
+    #[test]
+    fn test_srai() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_imm_op!(cpu, 0b101, 0x00000000, 0x00000000, 0  | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0xc0000000, 0x80000000, 1  | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0xff000000, 0x80000000, 7  | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0xfffe0000, 0x80000000, 14 | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0xffffffff, 0x80000001, 31 | 1 << 10);
+
+        test_imm_op!(cpu, 0b101, 0x7fffffff, 0x7fffffff, 0  | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0x3fffffff, 0x7fffffff, 1  | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0x00ffffff, 0x7fffffff, 7  | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0x0001ffff, 0x7fffffff, 14 | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0x00000000, 0x7fffffff, 31 | 1 << 10);
+
+        test_imm_op!(cpu, 0b101, 0x81818181, 0x81818181, 0  | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0xc0c0c0c0, 0x81818181, 1  | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0xff030303, 0x81818181, 7  | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0xfffe0606, 0x81818181, 14 | 1 << 10);
+        test_imm_op!(cpu, 0b101, 0xffffffff, 0x81818181, 31 | 1 << 10);
     }
 }
