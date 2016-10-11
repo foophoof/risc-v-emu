@@ -5,8 +5,14 @@ use ram::RAM;
 
 pub struct CPU {
     regs: [u32; 32],
+    csr: CSRs,
     pub pc: u32,
     pub ram: RAM,
+}
+
+struct CSRs {
+    cycles: u64,
+    mepc: u32,
 }
 
 impl CPU {
@@ -16,6 +22,10 @@ impl CPU {
 
         CPU {
             regs: regs,
+            csr: CSRs {
+                cycles: 0,
+                mepc: 0,
+            },
             pc: 0,
             ram: ram,
         }
@@ -27,7 +37,11 @@ impl CPU {
         while let Some(instr) = self.get_instruction() {
             instr.execute(self);
             self.pc = self.pc.wrapping_add(4);
+            self.csr.cycles = self.csr.cycles.wrapping_add(1);
+            print!("{:?}\r", self);
         }
+
+        println!("last was: {:032b} (at {:08x})", self.ram.get_u32(self.pc), self.pc);
     }
 
     fn get_instruction(&self) -> Option<Box<instruction::Instruction>> {
@@ -44,6 +58,26 @@ impl CPU {
         }
 
         self.regs[reg as usize] = value
+    }
+
+    pub fn get_csr(&self, csr: u16) -> u32 {
+        match csr {
+            0x341 => self.csr.mepc,
+            0x700...0x702 => 0,
+            0x704...0x706 => 0,
+            0x708...0x70A => 0,
+            0xC00 => self.csr.cycles as u32,
+            0xC80 => (self.csr.cycles >> 32) as u32,
+            0xF10 => (1 << 30) | (1 << 8) | (1 << 12), // misa RV32IM
+            _ => panic!("read csr 0x{:03X} not implemented", csr),
+        }
+    }
+
+    pub fn set_csr(&mut self, csr: u16, value: u32) {
+        match csr {
+            0x780 => {},
+            _ => panic!("write csr 0x{:03X} not implemented", csr),
+        }
     }
 }
 

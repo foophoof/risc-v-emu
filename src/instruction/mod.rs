@@ -1,5 +1,6 @@
 pub mod encoding;
 pub mod rv32i;
+pub mod rv32m;
 
 use std::fmt::Debug;
 use cpu::CPU;
@@ -18,7 +19,11 @@ pub fn parse(instruction: u32) -> Option<Box<Instruction>> {
         0x23 => rv32i::Store::parse(instruction).map(|i| Box::new(i) as Box<Instruction>),
         // 0x27 => store_fp::StoreFp::parse(instruction).map(|i| Box::new(i) as Box<Instruction>),
         // 0x2F => amo::Amo::parse(instruction).map(|i| Box::new(i) as Box<Instruction>),
-        0x33 => rv32i::Op::parse(instruction).map(|i| Box::new(i) as Box<Instruction>),
+        0x33 => match encoding::get_funct7(instruction) {
+            0x00 | 0x20 => rv32i::Op::parse(instruction).map(|i| Box::new(i) as Box<Instruction>),
+            0x01 => rv32m::Op::parse(instruction).map(|i| Box::new(i) as Box<Instruction>),
+            _ => None,
+        },
         0x37 => rv32i::Lui::parse(instruction).map(|i| Box::new(i) as Box<Instruction>),
         // 0x43 => madd::Madd::parse(instruction).map(|i| Box::new(i) as Box<Instruction>),
         // 0x47 => msub::Msub::parse(instruction).map(|i| Box::new(i) as Box<Instruction>),
