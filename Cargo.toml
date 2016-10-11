@@ -2,6 +2,7 @@
 name = "risc-v-emu"
 version = "0.1.0"
 authors = ["foophoof <me@foophoof.com>"]
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 elf = "0.0.10"
