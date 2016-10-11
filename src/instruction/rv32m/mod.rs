@@ -68,7 +68,7 @@ impl Instruction for Op {
         let operand2 = cpu.get_register(self.operand2);
 
         let result = match self.typ {
-            OperationType::Mul => ((operand1 as u64) * (operand2 as u64)) as u32,
+            OperationType::Mul => operand1.wrapping_mul(operand2),
             OperationType::MulHighSigned => (((operand1 as i32 as i64) * (operand2 as i32 as i64)) >> 32) as u32,
             OperationType::MulHighUnsigned => (((operand1 as u64) * (operand2 as u64)) >> 32) as u32,
             OperationType::MulHighSignedUnsigned => (((operand1 as i32 as i64) * (operand2 as i64)) >> 32) as u32,
@@ -90,7 +90,7 @@ mod tests {
     use instruction::Instruction;
 
     #[test]
-    fn test_multiply() {
+    fn test_mul() {
         let mut cpu = CPU::new(RAM::new(1024));
 
         let instr = Op::parse(0b0000001_00011_00010_000_00001_0110011).expect("couldn't parse MUL x0,x1,x2");
@@ -123,5 +123,104 @@ mod tests {
         test_mul!(0x00000001, 0xffffffff, 0xffffffff);
         test_mul!(0xffffffff, 0xffffffff, 0x00000001);
         test_mul!(0xffffffff, 0x00000001, 0xffffffff);
+    }
+
+    #[test]
+    fn test_mulh() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        let instr = Op::parse(0b0000001_00011_00010_001_00001_0110011).expect("couldn't parse MULH x0,x1,x2");
+
+        macro_rules! test_mulh {
+            ($result:expr, $val1:expr, $val2:expr) => {
+                cpu.set_register(2, $val1);
+                cpu.set_register(3, $val2);
+                instr.execute(&mut cpu);
+                assert_eq!(cpu.get_register(1), $result);
+            }
+        }
+
+        test_mulh!(0x00000000, 0x00000000, 0x00000000);
+        test_mulh!(0x00000000, 0x00000001, 0x00000001);
+        test_mulh!(0x00000000, 0x00000003, 0x00000007);
+
+        test_mulh!(0x00000000, 0x00000000, 0xffff8000);
+        test_mulh!(0x00000000, 0x80000000, 0x00000000);
+        test_mulh!(0x00000000, 0x80000000, 0x00000000);
+
+        test_mulh!(0xffff0081, 0xaaaaaaab, 0x0002fe7d);
+        test_mulh!(0xffff0081, 0x0002fe7d, 0xaaaaaaab);
+
+        test_mulh!(0x00010000, 0xff000000, 0xff000000);
+
+        test_mulh!(0x00000000, 0xffffffff, 0xffffffff);
+        test_mulh!(0xffffffff, 0xffffffff, 0x00000001);
+        test_mulh!(0xffffffff, 0x00000001, 0xffffffff);
+    }
+
+    #[test]
+    fn test_mulhsu() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        let instr = Op::parse(0b0000001_00011_00010_010_00001_0110011).expect("couldn't parse MULHSU x0,x1,x2");
+
+        macro_rules! test_mulhsu {
+            ($result:expr, $val1:expr, $val2:expr) => {
+                cpu.set_register(2, $val1);
+                cpu.set_register(3, $val2);
+                instr.execute(&mut cpu);
+                assert_eq!(cpu.get_register(1), $result);
+            }
+        }
+
+        test_mulhsu!(0x00000000, 0x00000000, 0x00000000);
+        test_mulhsu!(0x00000000, 0x00000001, 0x00000001);
+        test_mulhsu!(0x00000000, 0x00000003, 0x00000007);
+
+        test_mulhsu!(0x00000000, 0x00000000, 0xffff8000);
+        test_mulhsu!(0x00000000, 0x80000000, 0x00000000);
+        test_mulhsu!(0x80004000, 0x80000000, 0xffff8000);
+
+        test_mulhsu!(0xffff0081, 0xaaaaaaab, 0x0002fe7d);
+        test_mulhsu!(0x0001fefe, 0x0002fe7d, 0xaaaaaaab);
+
+        test_mulhsu!(0xff010000, 0xff000000, 0xff000000);
+
+        test_mulhsu!(0xffffffff, 0xffffffff, 0xffffffff);
+        test_mulhsu!(0xffffffff, 0xffffffff, 0x00000001);
+        test_mulhsu!(0x00000000, 0x00000001, 0xffffffff);
+    }
+
+    #[test]
+    fn test_mulhu() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        let instr = Op::parse(0b0000001_00011_00010_011_00001_0110011).expect("couldn't parse MULHU x0,x1,x2");
+
+        macro_rules! test_mulhu {
+            ($result:expr, $val1:expr, $val2:expr) => {
+                cpu.set_register(2, $val1);
+                cpu.set_register(3, $val2);
+                instr.execute(&mut cpu);
+                assert_eq!(cpu.get_register(1), $result);
+            }
+        }
+
+        test_mulhu!(0x00000000, 0x00000000, 0x00000000);
+        test_mulhu!(0x00000000, 0x00000001, 0x00000001);
+        test_mulhu!(0x00000000, 0x00000003, 0x00000007);
+
+        test_mulhu!(0x00000000, 0x00000000, 0xffff8000);
+        test_mulhu!(0x00000000, 0x80000000, 0x00000000);
+        test_mulhu!(0x7fffc000, 0x80000000, 0xffff8000);
+
+        test_mulhu!(0x0001fefe, 0xaaaaaaab, 0x0002fe7d);
+        test_mulhu!(0x0001fefe, 0x0002fe7d, 0xaaaaaaab);
+
+        test_mulhu!(0xfe010000, 0xff000000, 0xff000000);
+
+        test_mulhu!(0xfffffffe, 0xffffffff, 0xffffffff);
+        test_mulhu!(0x00000000, 0xffffffff, 0x00000001);
+        test_mulhu!(0x00000000, 0x00000001, 0xffffffff);
     }
 }
