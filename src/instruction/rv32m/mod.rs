@@ -79,7 +79,13 @@ impl Instruction for Op {
                     (operand1 as i32).wrapping_div(operand2 as i32) as u32
                 }
             },
-            OperationType::DivUnsigned => operand1 / operand2,
+            OperationType::DivUnsigned => {
+                if operand2 == 0 {
+                    (-1i32) as u32
+                } else {
+                    operand1 / operand2
+                }
+            },
             OperationType::Remainder => ((operand1 as i32) % (operand2 as i32)) as u32,
             OperationType::RemainderUnsigned => operand1 % operand2,
         };
@@ -257,5 +263,33 @@ mod tests {
         test_div!(-1i32, i32::MIN, 0);
         test_div!(-1i32,      1, 0);
         test_div!(-1i32,      0, 0);
+    }
+
+    #[test]
+    fn test_divu() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        let instr = Op::parse(0b0000001_00011_00010_101_00001_0110011).expect("couldn't parse DIVU x0,x1,x2");
+
+        macro_rules! test_divu {
+            ($result:expr, $val1:expr, $val2:expr) => {
+                cpu.set_register(2, $val1 as u32);
+                cpu.set_register(3, $val2 as u32);
+                instr.execute(&mut cpu);
+                assert_eq!(cpu.get_register(1), $result as u32);
+            }
+        }
+
+        test_divu!(        3,  20,     6);
+        test_divu!(715827879, -20i32,  6);
+        test_divu!(        0,  20,    -6i32);
+        test_divu!(        0, -20i32, -6i32);
+
+        test_divu!(i32::MIN, i32::MIN,  1);
+        test_divu!(       0, i32::MIN, -1i32);
+
+        test_divu!(-1i32, i32::MIN, 0);
+        test_divu!(-1i32,        1, 0);
+        test_divu!(-1i32,        0, 0);
     }
 }
