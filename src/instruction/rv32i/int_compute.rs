@@ -254,7 +254,7 @@ mod tests {
     macro_rules! test_imm_src1_eq_dest {
         ($cpu:expr, $op:expr, $result:expr, $val1:expr, $imm:expr) => {
             $cpu.set_register(1, $val1);
-            let raw_instruction = (($imm & 0xFFF) << 20) | (1 << 15) | (0 << 12) | (1 << 7) | $op << 12 | 0x13;
+            let raw_instruction = (($imm & 0xFFF) << 20) | (1 << 15) | (1 << 7) | $op << 12 | 0x13;
             let instr = OpImm::parse(raw_instruction).expect("couldn't parse instruction");
             instr.execute(&mut $cpu);
             assert_eq!($cpu.get_register(1), $result);
