@@ -47,23 +47,23 @@ pub fn get_opcode(instruction: u32) -> u8 {
     (instruction & 0x7F) as u8
 }
 
-fn get_rd(instruction: u32) -> u8 {
+pub fn get_rd(instruction: u32) -> u8 {
     ((instruction & 0xF80) >> 7) as u8
 }
 
-fn get_rs1(instruction: u32) -> u8 {
+pub fn get_rs1(instruction: u32) -> u8 {
     ((instruction & 0xF8000) >> 15) as u8
 }
 
-fn get_rs2(instruction: u32) -> u8 {
+pub fn get_rs2(instruction: u32) -> u8 {
     ((instruction & 0x1F00000) >> 20) as u8
 }
 
-fn get_funct3(instruction: u32) -> u8 {
+pub fn get_funct3(instruction: u32) -> u8 {
     ((instruction & 0x7000) >> 12) as u8
 }
 
-fn get_funct7(instruction: u32) -> u8 {
+pub fn get_funct7(instruction: u32) -> u8 {
     ((instruction & 0xFE000000) >> 25) as u8
 }
 
