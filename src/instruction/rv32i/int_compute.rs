@@ -170,8 +170,8 @@ impl Instruction for Op {
                              OperationType::And => src1 & src2,
                              OperationType::Or => src1 | src2,
                              OperationType::Xor => src1 ^ src2,
-                             OperationType::ShiftLeftLogical => src1 << (src2 & 0x3F),
                              OperationType::ShiftRightLogical => src1 >> src2,
+                             OperationType::ShiftLeftLogical => src1 << (src2 & 0x1F),
                              OperationType::ShiftRightArithmetic => ((src1 as i32) >> src2) as u32,
                          });
     }
