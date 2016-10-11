@@ -14,7 +14,10 @@ mod ram;
 use cpu::CPU;
 use ram::RAM;
 
-// use std::fs::File;
+use std::cmp::max;
+use std::io::prelude::*;
+use std::io::SeekFrom;
+use std::fs::File;
 use std::env;
 
 fn load_elf_to_ram(path: &str, ram: &mut RAM) -> u32 {
@@ -23,10 +26,23 @@ fn load_elf_to_ram(path: &str, ram: &mut RAM) -> u32 {
         Err(e) => panic!("Error: {:?}", e),
     };
 
-    for section in elf_file.sections {
-        for (i, &data) in section.data.as_slice().iter().enumerate() {
-            let addr = (section.shdr.addr as u32) + (i as u32);
-            ram[addr] = data;
+    let mut raw_file = File::open(path).expect("couldn't open file");
+
+    for program_header in elf_file.phdrs {
+        if program_header.progtype == elf::types::ProgType(1) {
+            let mut buf = vec![0; max(program_header.memsz as usize, program_header.filesz as usize)];
+
+            for i in 0..(program_header.memsz) {
+                buf[i as usize] = 0;
+            }
+
+            raw_file.seek(SeekFrom::Start(program_header.offset)).expect("couldn't seek in file");
+            raw_file.read(&mut buf[0..(program_header.filesz as usize)]).expect("couldn't read file");
+
+            for (i, &data) in buf.iter().enumerate() {
+                let addr = (program_header.vaddr as u32) + (i as u32);
+                ram[addr] = data;
+            }
         }
     }
 
