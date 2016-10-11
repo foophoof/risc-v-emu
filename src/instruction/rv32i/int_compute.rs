@@ -262,6 +262,148 @@ mod tests {
     }
 
     #[test]
+    fn test_addi() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_imm_op!(cpu, 0b000, 0x00000000, 0x00000000, 0x000);
+        test_imm_op!(cpu, 0b000, 0x00000002, 0x00000001, 0x001);
+        test_imm_op!(cpu, 0b000, 0x0000000a, 0x00000003, 0x007);
+
+        test_imm_op!(cpu, 0b000, 0xfffff800, 0x00000000, 0x800);
+        test_imm_op!(cpu, 0b000, 0x80000000, 0x80000000, 0x000);
+        test_imm_op!(cpu, 0b000, 0x7ffff800, 0x80000000, 0x800);
+
+        test_imm_op!(cpu, 0b000, 0x000007ff, 0x00000000, 0x7ff);
+        test_imm_op!(cpu, 0b000, 0x7fffffff, 0x7fffffff, 0x000);
+        test_imm_op!(cpu, 0b000, 0x800007fe, 0x7fffffff, 0x7ff);
+
+        test_imm_op!(cpu, 0b000, 0x800007ff, 0x80000000, 0x7ff);
+        test_imm_op!(cpu, 0b000, 0x7ffff7ff, 0x7fffffff, 0x800);
+
+        test_imm_op!(cpu, 0b000, 0xffffffff, 0x00000000, 0xfff);
+        test_imm_op!(cpu, 0b000, 0x00000000, 0xffffffff, 0x001);
+        test_imm_op!(cpu, 0b000, 0xfffffffe, 0xffffffff, 0xfff);
+
+        test_imm_op!(cpu, 0b000, 0x80000000, 0x7fffffff, 0x001);
+
+        test_imm_src1_eq_dest!(cpu, 0b000, 24, 13, 11);
+    }
+
+    #[test]
+    fn test_slli() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_imm_op!(cpu, 0b001, 0x00000001, 0x00000001, 0);
+        test_imm_op!(cpu, 0b001, 0x00000002, 0x00000001, 1);
+        test_imm_op!(cpu, 0b001, 0x00000080, 0x00000001, 7);
+        test_imm_op!(cpu, 0b001, 0x00004000, 0x00000001, 14);
+        test_imm_op!(cpu, 0b001, 0x80000000, 0x00000001, 31);
+
+        test_imm_op!(cpu, 0b001, 0xffffffff, 0xffffffff, 0);
+        test_imm_op!(cpu, 0b001, 0xfffffffe, 0xffffffff, 1);
+        test_imm_op!(cpu, 0b001, 0xffffff80, 0xffffffff, 7);
+        test_imm_op!(cpu, 0b001, 0xffffc000, 0xffffffff, 14);
+        test_imm_op!(cpu, 0b001, 0x80000000, 0xffffffff, 31);
+
+        test_imm_op!(cpu, 0b001, 0x21212121, 0x21212121, 0);
+        test_imm_op!(cpu, 0b001, 0x42424242, 0x21212121, 1);
+        test_imm_op!(cpu, 0b001, 0x90909080, 0x21212121, 7);
+        test_imm_op!(cpu, 0b001, 0x48484000, 0x21212121, 14);
+        test_imm_op!(cpu, 0b001, 0x80000000, 0x21212121, 31);
+
+        test_imm_src1_eq_dest!(cpu, 0b001, 0x00000080, 0x00000001, 7);
+    }
+
+    #[test]
+    fn test_slti() {
+        let mut cpu = CPU::new(RAM::new(1024));
+        
+        test_imm_op!(cpu, 0b010, 0, 0x00000000, 0x000);
+        test_imm_op!(cpu, 0b010, 0, 0x00000001, 0x001);
+        test_imm_op!(cpu, 0b010, 1, 0x00000003, 0x007);
+        test_imm_op!(cpu, 0b010, 0, 0x00000007, 0x003);
+
+        test_imm_op!(cpu, 0b010, 0, 0x00000000, 0x800);
+        test_imm_op!(cpu, 0b010, 1, 0x80000000, 0x000);
+        test_imm_op!(cpu, 0b010, 1, 0x80000000, 0x800);
+
+        test_imm_op!(cpu, 0b010, 1, 0x00000000, 0x7ff);
+        test_imm_op!(cpu, 0b010, 0, 0x7fffffff, 0x000);
+        test_imm_op!(cpu, 0b010, 0, 0x7fffffff, 0x7ff);
+
+        test_imm_op!(cpu, 0b010, 1, 0x80000000, 0x7ff);
+        test_imm_op!(cpu, 0b010, 0, 0x7fffffff, 0x800);
+
+        test_imm_op!(cpu, 0b010, 0, 0x00000000, 0xfff);
+        test_imm_op!(cpu, 0b010, 1, 0xffffffff, 0x001);
+        test_imm_op!(cpu, 0b010, 0, 0xffffffff, 0xfff);
+
+        test_imm_src1_eq_dest!(cpu, 0b010, 1, 11, 13);
+    }
+
+    #[test]
+    fn test_sltiu() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_imm_op!(cpu, 0b011, 0, 0x00000000, 0x000);
+        test_imm_op!(cpu, 0b011, 0, 0x00000001, 0x001);
+        test_imm_op!(cpu, 0b011, 1, 0x00000003, 0x007);
+        test_imm_op!(cpu, 0b011, 0, 0x00000007, 0x003);
+
+        test_imm_op!(cpu, 0b011, 1, 0x00000000, 0x800);
+        test_imm_op!(cpu, 0b011, 0, 0x80000000, 0x000);
+        test_imm_op!(cpu, 0b011, 1, 0x80000000, 0x800);
+
+        test_imm_op!(cpu, 0b011, 1, 0x00000000, 0x7ff);
+        test_imm_op!(cpu, 0b011, 0, 0x7fffffff, 0x000);
+        test_imm_op!(cpu, 0b011, 0, 0x7fffffff, 0x7ff);
+
+        test_imm_op!(cpu, 0b011, 0, 0x80000000, 0x7ff);
+        test_imm_op!(cpu, 0b011, 1, 0x7fffffff, 0x800);
+
+        test_imm_op!(cpu, 0b011, 1, 0x00000000, 0xfff);
+        test_imm_op!(cpu, 0b011, 0, 0xffffffff, 0x001);
+        test_imm_op!(cpu, 0b011, 0, 0xffffffff, 0xfff);
+
+        test_imm_src1_eq_dest!(cpu, 0b011, 1, 11, 13);
+    }
+
+    #[test]
+    fn test_xori() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_imm_op!(cpu, 0b100, 0xff00f00f, 0x00ff0f00, 0xf0f);
+        test_imm_op!(cpu, 0b100, 0x0ff00f00, 0x0ff00ff0, 0x0f0);
+        test_imm_op!(cpu, 0b100, 0x00ff0ff0, 0x00ff08ff, 0x70f);
+        test_imm_op!(cpu, 0b100, 0xf00ff0ff, 0xf00ff00f, 0x0f0);
+
+        test_imm_src1_eq_dest!(cpu, 0b100, 0xff00f00f, 0xff00f700, 0x70f);
+    }
+
+    #[test]
+    fn test_srli() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_imm_op!(cpu, 0b101, 0x80000000 >>  0, 0x80000000, 0);
+        test_imm_op!(cpu, 0b101, 0x80000000 >>  1, 0x80000000, 1);
+        test_imm_op!(cpu, 0b101, 0x80000000 >>  7, 0x80000000, 7);
+        test_imm_op!(cpu, 0b101, 0x80000000 >> 14, 0x80000000, 14);
+        test_imm_op!(cpu, 0b101, 0x80000001 >> 31, 0x80000001, 31);
+        test_imm_op!(cpu, 0b101, 0xffffffff >>  0, 0xffffffff, 0);
+        test_imm_op!(cpu, 0b101, 0xffffffff >>  1, 0xffffffff, 1);
+        test_imm_op!(cpu, 0b101, 0xffffffff >>  7, 0xffffffff, 7);
+        test_imm_op!(cpu, 0b101, 0xffffffff >> 14, 0xffffffff, 14);
+        test_imm_op!(cpu, 0b101, 0xffffffff >> 31, 0xffffffff, 31);
+        test_imm_op!(cpu, 0b101, 0x21212121 >>  0, 0x21212121, 0);
+        test_imm_op!(cpu, 0b101, 0x21212121 >>  1, 0x21212121, 1);
+        test_imm_op!(cpu, 0b101, 0x21212121 >>  7, 0x21212121, 7);
+        test_imm_op!(cpu, 0b101, 0x21212121 >> 14, 0x21212121, 14);
+        test_imm_op!(cpu, 0b101, 0x21212121 >> 31, 0x21212121, 31);
+
+        test_imm_src1_eq_dest!(cpu, 0b101, 0x01000000, 0x80000000, 7);
+    }
+
+    #[test]
     fn test_srai() {
         let mut cpu = CPU::new(RAM::new(1024));
 
@@ -282,5 +424,31 @@ mod tests {
         test_imm_op!(cpu, 0b101, 0xff030303, 0x81818181, 7  | 1 << 10);
         test_imm_op!(cpu, 0b101, 0xfffe0606, 0x81818181, 14 | 1 << 10);
         test_imm_op!(cpu, 0b101, 0xffffffff, 0x81818181, 31 | 1 << 10);
+
+        test_imm_src1_eq_dest!(cpu, 0b101, 0xff000000, 0x80000000, 7 | 1 << 10);
+    }
+
+    #[test]
+    fn test_ori() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_imm_op!(cpu, 0b110, 0xffffff0f, 0xff00ff00, 0xf0f);
+        test_imm_op!(cpu, 0b110, 0x0ff00ff0, 0x0ff00ff0, 0x0f0);
+        test_imm_op!(cpu, 0b110, 0x00ff07ff, 0x00ff00ff, 0x70f);
+        test_imm_op!(cpu, 0b110, 0xf00ff0ff, 0xf00ff00f, 0x0f0);
+
+        test_imm_src1_eq_dest!(cpu, 0b110, 0xff00fff0, 0xff00ff00, 0x0f0);
+    }
+
+    #[test]
+    fn test_andi() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_imm_op!(cpu, 0b111, 0xff00ff00, 0xff00ff00, 0xf0f );
+        test_imm_op!(cpu, 0b111, 0x000000f0, 0x0ff00ff0, 0x0f0 );
+        test_imm_op!(cpu, 0b111, 0x0000000f, 0x00ff00ff, 0x70f );
+        test_imm_op!(cpu, 0b111, 0x00000000, 0xf00ff00f, 0x0f0 );
+
+        test_imm_src1_eq_dest!(cpu, 0b111, 0x00000000, 0xff00ff00, 0x0f0);
     }
 }
