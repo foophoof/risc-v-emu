@@ -26,12 +26,12 @@ impl RAM {
     }
 
     pub fn set_u16(&mut self, index: u32, data: u16) {
-        self[index + 0] = ((data & 0x00FF) >> 0) as u8;
+        self[index] = (data & 0x00FF) as u8;
         self[index + 1] = ((data & 0xFF00) >> 8) as u8;
     }
 
     pub fn set_u32(&mut self, index: u32, data: u32) {
-        self[index + 0] = ((data & 0x000000FF) >> 0) as u8;
+        self[index] = (data & 0x000000FF) as u8;
         self[index + 1] = ((data & 0x0000FF00) >> 8) as u8;
         self[index + 2] = ((data & 0x00FF0000) >> 16) as u8;
         self[index + 3] = ((data & 0xFF000000) >> 24) as u8;
