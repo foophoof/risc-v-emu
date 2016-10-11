@@ -1,5 +1,7 @@
 # risc-v-emu
 
+[![Build Status](https://travis-ci.org/foophoof/risc-v-emu.svg?branch=master)](https://travis-ci.org/foophoof/risc-v-emu)
+
 **Note**: This project is primarily a learning project. You probably shouldn't
 use it in any "real" code, as it may have bugs and/or security issues. Hopefully
 it's interesting to read through if you're interested in RISC-V, though.
