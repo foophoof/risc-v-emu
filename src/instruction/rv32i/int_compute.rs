@@ -656,4 +656,34 @@ mod tests {
         test_rr_src2_eq_dest!(cpu, 0b101, 0x20, 0xfffe0000, 0x80000000, 14);
         test_rr_src12_eq_dest!(cpu, 0b101, 0x20, 0, 7);
     }
+
+    #[test]
+    fn test_lui() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        macro_rules! test_case {
+            ($cpu:expr, $result:expr, $imm:expr, $sra:expr) => {
+                let raw_instruction = (($imm & 0xFFFFF) << 12) | (1 << 7) | 0x37;
+                let instr = Lui::parse(raw_instruction).expect("couldn't parse instruction");
+                instr.execute(&mut $cpu);
+
+                let sra_amount = $sra | (1 << 10);
+                let sra_raw_instruction = ((sra_amount & 0xFFF) << 20) | (1 << 15) | (1 << 7) | 0b101 << 12 | 0x13; 
+                let sra_instr = OpImm::parse(sra_raw_instruction).expect("couldn't parse SRA instruction");
+                sra_instr.execute(&mut cpu);
+
+                assert_eq!($cpu.get_register(1), $result);
+            }
+        }
+
+        test_case!(cpu, 0x00000000, 0x00000, 0);
+        test_case!(cpu, 0xfffff800, 0xfffff, 1);
+        test_case!(cpu, 0x000007ff, 0x7ffff, 20);
+        test_case!(cpu, 0xfffff800, 0x80000, 20);
+
+        let raw_instruction = ((0x80000 & 0xFFFFF) << 12) | (0 << 7) | 0x37;
+        let instr = Lui::parse(raw_instruction).expect("couldn't parse instruction");
+        instr.execute(&mut cpu);
+        assert_eq!(cpu.get_register(0), 0);
+    }
 }
