@@ -93,7 +93,13 @@ impl Instruction for Op {
                     (operand1 as i32).wrapping_rem(operand2 as i32) as u32
                 }
             },
-            OperationType::RemainderUnsigned => operand1 % operand2,
+            OperationType::RemainderUnsigned => {
+                if operand2 == 0 {
+                    operand1
+                } else {
+                    operand1 % operand2
+                }
+            },
         };
 
         cpu.set_register(self.dest, result);
@@ -325,5 +331,33 @@ mod tests {
         test_rem!(i32::MIN, i32::MIN, 0);
         test_rem!(       1,        1, 0);
         test_rem!(       0,        0, 0);
+    }
+
+    #[test]
+    fn test_remu() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        let instr = Op::parse(0b0000001_00011_00010_111_00001_0110011).expect("couldn't parse REMU x0,x1,x2");
+
+        macro_rules! test_remu {
+            ($result:expr, $val1:expr, $val2:expr) => {
+                cpu.set_register(2, $val1 as u32);
+                cpu.set_register(3, $val2 as u32);
+                instr.execute(&mut cpu);
+                assert_eq!(cpu.get_register(1), $result as u32);
+            }
+        }
+
+        test_remu!(  2,     20,      6);
+        test_remu!(  2,    -20i32,   6);
+        test_remu!( 20,     20,     -6i32);
+        test_remu!(-20i32, -20i32,  -6i32);
+
+        test_remu!(       0, i32::MIN,  1);
+        test_remu!(i32::MIN, i32::MIN, -1i32);
+
+        test_remu!(i32::MIN, i32::MIN, 0 );
+        test_remu!(       1,        1, 0 );
+        test_remu!(       0,        0, 0 );
     }
 }
