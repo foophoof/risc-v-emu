@@ -8,9 +8,9 @@ it's interesting to read through if you're interested in RISC-V, though.
 
 risc-v-emu is a RISC-V emulator written in Rust.
 
-At the moment, the RV32G (IMAFD) ISA is being implemented according to the 2.1
-spec, and the 1.9 privileged spec draft as of October 8th 2016 is being used for
-the privileged parts.
+The initial goal is to implement the RV32G (IMAFD) ISA according to the 2.1
+User-Level ISA spec, and machine-mode (M-mode) according to the 1.9 Privileged
+Architecture spec.
 
 ## Usage
 
