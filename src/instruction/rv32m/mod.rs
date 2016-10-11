@@ -72,7 +72,13 @@ impl Instruction for Op {
             OperationType::MulHighSigned => (((operand1 as i32 as i64) * (operand2 as i32 as i64)) >> 32) as u32,
             OperationType::MulHighUnsigned => (((operand1 as u64) * (operand2 as u64)) >> 32) as u32,
             OperationType::MulHighSignedUnsigned => (((operand1 as i32 as i64) * (operand2 as i64)) >> 32) as u32,
-            OperationType::Div => ((operand1 as i32) / (operand2 as i32)) as u32,
+            OperationType::Div => {
+                if operand2 == 0 {
+                    (-1i32) as u32
+                } else {
+                    (operand1 as i32).wrapping_div(operand2 as i32) as u32
+                }
+            },
             OperationType::DivUnsigned => operand1 / operand2,
             OperationType::Remainder => ((operand1 as i32) % (operand2 as i32)) as u32,
             OperationType::RemainderUnsigned => operand1 % operand2,
@@ -84,6 +90,7 @@ impl Instruction for Op {
 
 #[cfg(test)]
 mod tests {
+    use std::{i32};
     use super::*;
     use ram::RAM;
     use cpu::CPU;
@@ -222,5 +229,33 @@ mod tests {
         test_mulhu!(0xfffffffe, 0xffffffff, 0xffffffff);
         test_mulhu!(0x00000000, 0xffffffff, 0x00000001);
         test_mulhu!(0x00000000, 0x00000001, 0xffffffff);
+    }
+
+    #[test]
+    fn test_div() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        let instr = Op::parse(0b0000001_00011_00010_100_00001_0110011).expect("couldn't parse DIV x0,x1,x2");
+
+        macro_rules! test_div {
+            ($result:expr, $val1:expr, $val2:expr) => {
+                cpu.set_register(2, $val1 as u32);
+                cpu.set_register(3, $val2 as u32);
+                instr.execute(&mut cpu);
+                assert_eq!(cpu.get_register(1), $result as u32);
+            }
+        }
+
+        test_div!( 3,  20,   6);
+        test_div!(-3i32, -20i32,   6);
+        test_div!(-3i32,  20,  -6i32);
+        test_div!( 3, -20i32,  -6i32);
+
+        test_div!(i32::MIN, i32::MIN,  1);
+        test_div!(i32::MIN, i32::MIN, -1i32);
+
+        test_div!(-1i32, i32::MIN, 0);
+        test_div!(-1i32,      1, 0);
+        test_div!(-1i32,      0, 0);
     }
 }
