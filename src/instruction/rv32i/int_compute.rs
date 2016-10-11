@@ -496,6 +496,64 @@ mod tests {
     }
 
     #[test]
+    fn test_add() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_rr_op!(cpu, 0b000, 0x00, 0x00000000, 0x00000000, 0x00000000);
+        test_rr_op!(cpu, 0b000, 0x00, 0x00000002, 0x00000001, 0x00000001);
+        test_rr_op!(cpu, 0b000, 0x00, 0x0000000a, 0x00000003, 0x00000007);
+
+        test_rr_op!(cpu, 0b000, 0x00, 0xffff8000, 0x00000000, 0xffff8000);
+        test_rr_op!(cpu, 0b000, 0x00, 0x80000000, 0x80000000, 0x00000000);
+        test_rr_op!(cpu, 0b000, 0x00, 0x7fff8000, 0x80000000, 0xffff8000);
+
+        test_rr_op!(cpu, 0b000, 0x00, 0x00007fff, 0x00000000, 0x00007fff);
+        test_rr_op!(cpu, 0b000, 0x00, 0x7fffffff, 0x7fffffff, 0x00000000);
+        test_rr_op!(cpu, 0b000, 0x00, 0x80007ffe, 0x7fffffff, 0x00007fff);
+
+        test_rr_op!(cpu, 0b000, 0x00, 0x80007fff, 0x80000000, 0x00007fff);
+        test_rr_op!(cpu, 0b000, 0x00, 0x7fff7fff, 0x7fffffff, 0xffff8000);
+
+        test_rr_op!(cpu, 0b000, 0x00, 0xffffffff, 0x00000000, 0xffffffff);
+        test_rr_op!(cpu, 0b000, 0x00, 0x00000000, 0xffffffff, 0x00000001);
+        test_rr_op!(cpu, 0b000, 0x00, 0xfffffffe, 0xffffffff, 0xffffffff);
+
+        test_rr_op!(cpu, 0b000, 0x00, 0x80000000, 0x00000001, 0x7fffffff);
+
+        test_rr_src1_eq_dest!(cpu, 0b000, 0x00, 24, 13, 11);
+        test_rr_src2_eq_dest!(cpu, 0b000, 0x00, 25, 14, 11);
+        test_rr_src12_eq_dest!(cpu, 0b000, 0x00, 26, 13);
+    }
+
+    #[test]
+    fn test_sub() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_rr_op!(cpu, 0b000, 0x20, 0x00000000, 0x00000000, 0x00000000);
+        test_rr_op!(cpu, 0b000, 0x20, 0x00000000, 0x00000001, 0x00000001);
+        test_rr_op!(cpu, 0b000, 0x20, 0xfffffffc, 0x00000003, 0x00000007);
+
+        test_rr_op!(cpu, 0b000, 0x20, 0x00008000, 0x00000000, 0xffff8000);
+        test_rr_op!(cpu, 0b000, 0x20, 0x80000000, 0x80000000, 0x00000000);
+        test_rr_op!(cpu, 0b000, 0x20, 0x80008000, 0x80000000, 0xffff8000);
+
+        test_rr_op!(cpu, 0b000, 0x20, 0xffff8001, 0x00000000, 0x00007fff);
+        test_rr_op!(cpu, 0b000, 0x20, 0x7fffffff, 0x7fffffff, 0x00000000);
+        test_rr_op!(cpu, 0b000, 0x20, 0x7fff8000, 0x7fffffff, 0x00007fff);
+
+        test_rr_op!(cpu, 0b000, 0x20, 0x7fff8001, 0x80000000, 0x00007fff);
+        test_rr_op!(cpu, 0b000, 0x20, 0x80007fff, 0x7fffffff, 0xffff8000);
+
+        test_rr_op!(cpu, 0b000, 0x20, 0x00000001, 0x00000000, 0xffffffff);
+        test_rr_op!(cpu, 0b000, 0x20, 0xfffffffe, 0xffffffff, 0x00000001);
+        test_rr_op!(cpu, 0b000, 0x20, 0x00000000, 0xffffffff, 0xffffffff);
+
+        test_rr_src1_eq_dest!(cpu, 0b000, 0x20, 2, 13, 11);
+        test_rr_src2_eq_dest!(cpu, 0b000, 0x20, 3, 14, 11);
+        test_rr_src12_eq_dest!(cpu, 0b000, 0x20, 0, 13);
+    }
+
+    #[test]
     fn test_sll() {
         let mut cpu = CPU::new(RAM::new(1024));
 
