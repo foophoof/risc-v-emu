@@ -170,7 +170,7 @@ impl Instruction for Op {
                              OperationType::And => src1 & src2,
                              OperationType::Or => src1 | src2,
                              OperationType::Xor => src1 ^ src2,
-                             OperationType::ShiftLeftLogical => src1 << src2,
+                             OperationType::ShiftLeftLogical => src1 << (src2 & 0x3F),
                              OperationType::ShiftRightLogical => src1 >> src2,
                              OperationType::ShiftRightArithmetic => ((src1 as i32) >> src2) as u32,
                          });
@@ -450,5 +450,82 @@ mod tests {
         test_imm_op!(cpu, 0b111, 0x00000000, 0xf00ff00f, 0x0f0 );
 
         test_imm_src1_eq_dest!(cpu, 0b111, 0x00000000, 0xff00ff00, 0x0f0);
+    }
+
+    macro_rules! test_rr_op {
+        ($cpu:expr, $op1:expr, $op2:expr, $result:expr, $val1:expr, $val2:expr) => {
+            $cpu.set_register(1, $val1);
+            $cpu.set_register(2, $val2);
+            let raw_instruction = $op2 << 25 | (2 << 20) | (1 << 15) | (3 << 7) | $op1 << 12 | 0x33;
+            let instr = Op::parse(raw_instruction).expect("couldn't parse instruction");
+            instr.execute(&mut $cpu);
+            assert_eq!($cpu.get_register(3), $result);
+        }
+    }
+
+    macro_rules! test_rr_src1_eq_dest {
+        ($cpu:expr, $op1:expr, $op2:expr, $result:expr, $val1:expr, $val2:expr) => {
+            $cpu.set_register(1, $val1);
+            $cpu.set_register(2, $val2);
+            let raw_instruction = $op2 << 25 | (2 << 20) | (1 << 15) | (1 << 7) | $op1 << 12 | 0x33;
+            let instr = Op::parse(raw_instruction).expect("couldn't parse instruction");
+            instr.execute(&mut $cpu);
+            assert_eq!($cpu.get_register(1), $result);
+        }
+    }
+
+    macro_rules! test_rr_src2_eq_dest {
+        ($cpu:expr, $op1:expr, $op2:expr, $result:expr, $val1:expr, $val2:expr) => {
+            $cpu.set_register(1, $val1);
+            $cpu.set_register(2, $val2);
+            let raw_instruction = $op2 << 25 | (2 << 20) | (1 << 15) | (2 << 7) | $op1 << 12 | 0x33;
+            let instr = Op::parse(raw_instruction).expect("couldn't parse instruction");
+            instr.execute(&mut $cpu);
+            assert_eq!($cpu.get_register(2), $result);
+        }
+    }
+
+    macro_rules! test_rr_src12_eq_dest {
+        ($cpu:expr, $op1:expr, $op2:expr, $result:expr, $val1:expr) => {
+            $cpu.set_register(1, $val1);
+            let raw_instruction = $op2 << 25 | (1 << 20) | (1 << 15) | (1 << 7) | $op1 << 12 | 0x33;
+            let instr = Op::parse(raw_instruction).expect("couldn't parse instruction");
+            instr.execute(&mut $cpu);
+            assert_eq!($cpu.get_register(1), $result);
+        }
+    }
+
+    #[test]
+    fn test_sll() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_rr_op!(cpu, 0b001, 0x00, 0x00000001, 0x00000001, 0);
+        test_rr_op!(cpu, 0b001, 0x00, 0x00000002, 0x00000001, 1);
+        test_rr_op!(cpu, 0b001, 0x00, 0x00000080, 0x00000001, 7);
+        test_rr_op!(cpu, 0b001, 0x00, 0x00004000, 0x00000001, 14);
+        test_rr_op!(cpu, 0b001, 0x00, 0x80000000, 0x00000001, 31);
+
+        test_rr_op!(cpu, 0b001, 0x00, 0xffffffff, 0xffffffff, 0);
+        test_rr_op!(cpu, 0b001, 0x00, 0xfffffffe, 0xffffffff, 1);
+        test_rr_op!(cpu, 0b001, 0x00, 0xffffff80, 0xffffffff, 7);
+        test_rr_op!(cpu, 0b001, 0x00, 0xffffc000, 0xffffffff, 14);
+        test_rr_op!(cpu, 0b001, 0x00, 0x80000000, 0xffffffff, 31);
+
+        test_rr_op!(cpu, 0b001, 0x00, 0x21212121, 0x21212121, 0);
+        test_rr_op!(cpu, 0b001, 0x00, 0x42424242, 0x21212121, 1);
+        test_rr_op!(cpu, 0b001, 0x00, 0x90909080, 0x21212121, 7);
+        test_rr_op!(cpu, 0b001, 0x00, 0x48484000, 0x21212121, 14);
+        test_rr_op!(cpu, 0b001, 0x00, 0x80000000, 0x21212121, 31);
+
+        // Verify that shifts only use bottom six bits
+
+        test_rr_op!(cpu, 0b001, 0x00, 0x21212121, 0x21212121, 0xffffffc0);
+        test_rr_op!(cpu, 0b001, 0x00, 0x42424242, 0x21212121, 0xffffffc1);
+        test_rr_op!(cpu, 0b001, 0x00, 0x90909080, 0x21212121, 0xffffffc7);
+        test_rr_op!(cpu, 0b001, 0x00, 0x48484000, 0x21212121, 0xffffffce);
+
+        test_rr_src1_eq_dest!(cpu, 0b001, 0x00, 0x00000080, 0x00000001, 7);
+        test_rr_src2_eq_dest!(cpu, 0b001, 0x00, 0x00004000, 0x00000001, 14);
+        test_rr_src12_eq_dest!(cpu, 0b001, 0x00, 24, 3);
     }
 }
