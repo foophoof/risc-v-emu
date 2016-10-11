@@ -125,7 +125,7 @@ mod tests {
         let mut cpu = CPU::new(RAM::new(1024));
 
         let instr = Op::parse(0b0000001_00011_00010_000_00001_0110011)
-            .expect("couldn't parse MUL x0,x1,x2");
+            .expect("couldn't parse MUL x1, x2, x3");
 
         macro_rules! test_mul {
             ($result:expr, $val1:expr, $val2:expr) => {
@@ -162,7 +162,7 @@ mod tests {
         let mut cpu = CPU::new(RAM::new(1024));
 
         let instr = Op::parse(0b0000001_00011_00010_001_00001_0110011)
-            .expect("couldn't parse MULH x0,x1,x2");
+            .expect("couldn't parse MULH x1, x2, x3");
 
         macro_rules! test_mulh {
             ($result:expr, $val1:expr, $val2:expr) => {
@@ -196,7 +196,7 @@ mod tests {
         let mut cpu = CPU::new(RAM::new(1024));
 
         let instr = Op::parse(0b0000001_00011_00010_010_00001_0110011)
-            .expect("couldn't parse MULHSU x0,x1,x2");
+            .expect("couldn't parse MULHSU x1, x2, x3");
 
         macro_rules! test_mulhsu {
             ($result:expr, $val1:expr, $val2:expr) => {
@@ -230,7 +230,7 @@ mod tests {
         let mut cpu = CPU::new(RAM::new(1024));
 
         let instr = Op::parse(0b0000001_00011_00010_011_00001_0110011)
-            .expect("couldn't parse MULHU x0,x1,x2");
+            .expect("couldn't parse MULHU x1, x2, x3");
 
         macro_rules! test_mulhu {
             ($result:expr, $val1:expr, $val2:expr) => {
@@ -264,7 +264,7 @@ mod tests {
         let mut cpu = CPU::new(RAM::new(1024));
 
         let instr = Op::parse(0b0000001_00011_00010_100_00001_0110011)
-            .expect("couldn't parse DIV x0,x1,x2");
+            .expect("couldn't parse DIV x1, x2, x3");
 
         macro_rules! test_div {
             ($result:expr, $val1:expr, $val2:expr) => {
@@ -293,7 +293,7 @@ mod tests {
         let mut cpu = CPU::new(RAM::new(1024));
 
         let instr = Op::parse(0b0000001_00011_00010_101_00001_0110011)
-            .expect("couldn't parse DIVU x0,x1,x2");
+            .expect("couldn't parse DIVU x1, x2, x3");
 
         macro_rules! test_divu {
             ($result:expr, $val1:expr, $val2:expr) => {
@@ -322,7 +322,7 @@ mod tests {
         let mut cpu = CPU::new(RAM::new(1024));
 
         let instr = Op::parse(0b0000001_00011_00010_110_00001_0110011)
-            .expect("couldn't parse REM x0,x1,x2");
+            .expect("couldn't parse REM x1, x2, x3");
 
         macro_rules! test_rem {
             ($result:expr, $val1:expr, $val2:expr) => {
@@ -351,7 +351,7 @@ mod tests {
         let mut cpu = CPU::new(RAM::new(1024));
 
         let instr = Op::parse(0b0000001_00011_00010_111_00001_0110011)
-            .expect("couldn't parse REMU x0,x1,x2");
+            .expect("couldn't parse REMU x1, x2, x3");
 
         macro_rules! test_remu {
             ($result:expr, $val1:expr, $val2:expr) => {
