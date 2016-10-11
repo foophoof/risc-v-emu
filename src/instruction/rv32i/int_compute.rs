@@ -170,8 +170,8 @@ impl Instruction for Op {
                              OperationType::And => src1 & src2,
                              OperationType::Or => src1 | src2,
                              OperationType::Xor => src1 ^ src2,
-                             OperationType::ShiftRightLogical => src1 >> src2,
                              OperationType::ShiftLeftLogical => src1 << (src2 & 0x1F),
+                             OperationType::ShiftRightLogical => src1 >> (src2 & 0x1F),
                              OperationType::ShiftRightArithmetic => ((src1 as i32) >> src2) as u32,
                          });
     }
@@ -585,5 +585,40 @@ mod tests {
         test_rr_src1_eq_dest!(cpu, 0b001, 0x00, 0x00000080, 0x00000001, 7);
         test_rr_src2_eq_dest!(cpu, 0b001, 0x00, 0x00004000, 0x00000001, 14);
         test_rr_src12_eq_dest!(cpu, 0b001, 0x00, 24, 3);
+    }
+
+    #[test]
+    fn test_srl() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_rr_op!(cpu, 0b101, 0x00, 0x80000000 >> 0 , 0x80000000, 0);
+        test_rr_op!(cpu, 0b101, 0x00, 0x80000000 >> 1 , 0x80000000, 1);
+        test_rr_op!(cpu, 0b101, 0x00, 0x80000000 >> 7 , 0x80000000, 7);
+        test_rr_op!(cpu, 0b101, 0x00, 0x80000000 >> 14, 0x80000000, 14);
+        test_rr_op!(cpu, 0b101, 0x00, 0x80000001 >> 31, 0x80000001, 31);
+
+        test_rr_op!(cpu, 0b101, 0x00, 0xffffffff >> 0 , 0xffffffff, 0);
+        test_rr_op!(cpu, 0b101, 0x00, 0xffffffff >> 1 , 0xffffffff, 1);
+        test_rr_op!(cpu, 0b101, 0x00, 0xffffffff >> 7 , 0xffffffff, 7);
+        test_rr_op!(cpu, 0b101, 0x00, 0xffffffff >> 14, 0xffffffff, 14);
+        test_rr_op!(cpu, 0b101, 0x00, 0xffffffff >> 31, 0xffffffff, 31);
+
+        test_rr_op!(cpu, 0b101, 0x00, 0x21212121 >> 0 , 0x21212121, 0);
+        test_rr_op!(cpu, 0b101, 0x00, 0x21212121 >> 1 , 0x21212121, 1);
+        test_rr_op!(cpu, 0b101, 0x00, 0x21212121 >> 7 , 0x21212121, 7);
+        test_rr_op!(cpu, 0b101, 0x00, 0x21212121 >> 14, 0x21212121, 14);
+        test_rr_op!(cpu, 0b101, 0x00, 0x21212121 >> 31, 0x21212121, 31);
+
+        // Verify that shifts only use bottom five bits
+
+        test_rr_op!(cpu, 0b101, 0x00, 0x21212121, 0x21212121, 0xffffffc0);
+        test_rr_op!(cpu, 0b101, 0x00, 0x10909090, 0x21212121, 0xffffffc1);
+        test_rr_op!(cpu, 0b101, 0x00, 0x00424242, 0x21212121, 0xffffffc7);
+        test_rr_op!(cpu, 0b101, 0x00, 0x00008484, 0x21212121, 0xffffffce);
+        test_rr_op!(cpu, 0b101, 0x00, 0x00000000, 0x21212121, 0xffffffff);
+
+        test_rr_src1_eq_dest!(cpu, 0b101, 0x00, 0x01000000, 0x80000000, 7);
+        test_rr_src2_eq_dest!(cpu, 0b101, 0x00, 0x00020000, 0x80000000, 14);
+        test_rr_src12_eq_dest!(cpu, 0b101, 0x00, 0, 7);
     }
 }
