@@ -1,12 +1,12 @@
-# risc-v-emu
+# risc-v-emulator
 
-[![Build Status](https://travis-ci.org/foophoof/risc-v-emu.svg?branch=master)](https://travis-ci.org/foophoof/risc-v-emu)
+[![Build Status](https://travis-ci.org/foophoof/risc-v-emulator.svg?branch=master)](https://travis-ci.org/foophoof/risc-v-emulator)
 
 **Note**: This project is primarily a learning project. You probably shouldn't
 use it in any "real" code, as it may have bugs and/or security issues. Hopefully
 it's interesting to read through if you're interested in RISC-V, though.
 
-risc-v-emu is a RISC-V emulator written in Rust.
+risc-v-emulator is a RISC-V emulator written in Rust.
 
 The initial goal is to implement the RV32G (IMAFD) ISA according to the 2.1
 User-Level ISA spec, and machine-mode (M-mode) according to the 1.9 Privileged

@@ -1,4 +1,4 @@
-// Copyright 2016 risc-v-emu Developers
+// Copyright 2016 risc-v-emulator Developers
 //
 // Licensed under the Apache License, Version 2.0, <LICENSE-APACHE or
 // http://apache.org/licenses/LICENSE-2.0> or the MIT license <LICENSE-MIT or

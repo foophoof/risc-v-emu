@@ -1,5 +1,5 @@
 [root]
-name = "risc-v-emu"
+name = "risc-v-emulator"
 version = "0.1.0"
 dependencies = [
  "elf 0.0.10 (registry+https://github.com/rust-lang/crates.io-index)",
