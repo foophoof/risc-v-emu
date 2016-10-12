@@ -148,3 +148,127 @@ impl Instruction for Branch {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cpu::CPU;
+    use ram::RAM;
+    use instruction::Instruction;
+
+    macro_rules! test_br2_op_taken {
+        ($cpu:expr, $op:expr, $val1:expr, $val2:expr) => {
+            $cpu.set_register(1, $val1 as u32);
+            $cpu.set_register(2, $val2 as u32);
+            let raw_instruction = (4 << 8) | (2 << 20) | (1 << 15) | $op << 12 | 0x63;
+            let instr = Branch::parse(raw_instruction).expect("couldn't parse instruction");
+            $cpu.pc = 100;
+            instr.execute(&mut $cpu);
+            $cpu.pc = $cpu.pc.wrapping_add(4);
+            assert_eq!($cpu.pc, 108);
+        }
+    }
+
+    macro_rules! test_br2_op_not_taken {
+        ($cpu:expr, $op:expr, $val1:expr, $val2:expr) => {
+            $cpu.set_register(1, $val1 as u32);
+            $cpu.set_register(2, $val2 as u32);
+            let raw_instruction = (4 << 8) | (2 << 20) | (1 << 15) | $op << 12 | 0x63;
+            let instr = Branch::parse(raw_instruction).expect("couldn't parse instruction");
+            $cpu.pc = 100;
+            instr.execute(&mut $cpu);
+            $cpu.pc = $cpu.pc.wrapping_add(4);
+            assert_eq!($cpu.pc, 104);
+        }
+    }
+
+    #[test]
+    fn test_beq() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_br2_op_taken!(cpu, 0b000, 0, 0);
+        test_br2_op_taken!(cpu, 0b000, 1, 1);
+        test_br2_op_taken!(cpu, 0b000, -1i32, -1i32);
+
+        test_br2_op_not_taken!(cpu, 0b000, 0, 1);
+        test_br2_op_not_taken!(cpu, 0b000, 1, 0);
+        test_br2_op_not_taken!(cpu, 0b000, -1i32, 1);
+        test_br2_op_not_taken!(cpu, 0b000, 1, -1i32);
+    }
+
+    #[test]
+    fn test_bne() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_br2_op_taken!(cpu, 0b001, 0, 1);
+        test_br2_op_taken!(cpu, 0b001, 1, 0);
+        test_br2_op_taken!(cpu, 0b001, -1i32, 1);
+        test_br2_op_taken!(cpu, 0b001, 1, -1i32);
+
+        test_br2_op_not_taken!(cpu, 0b001, 0, 0);
+        test_br2_op_not_taken!(cpu, 0b001, 1, 1);
+        test_br2_op_not_taken!(cpu, 0b001, -1i32, -1i32);
+    }
+
+    #[test]
+    fn test_blt() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_br2_op_taken!(cpu, 0b100, 0, 1);
+        test_br2_op_taken!(cpu, 0b100, -1i32, 1);
+        test_br2_op_taken!(cpu, 0b100, -2i32, -1i32);
+
+        test_br2_op_not_taken!(cpu, 0b100, 1, 0);
+        test_br2_op_not_taken!(cpu, 0b100, 1, -1i32);
+        test_br2_op_not_taken!(cpu, 0b100, -1i32, -2i32);
+        test_br2_op_not_taken!(cpu, 0b100, 1, -2i32);
+    }
+
+    #[test]
+    fn test_bge() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_br2_op_taken!(cpu, 0b101, 0, 0);
+        test_br2_op_taken!(cpu, 0b101, 1, 1);
+        test_br2_op_taken!(cpu, 0b101, -1i32, -1i32);
+        test_br2_op_taken!(cpu, 0b101, 1, 0);
+        test_br2_op_taken!(cpu, 0b101, 1, -1i32);
+        test_br2_op_taken!(cpu, 0b101, -1i32, -2i32);
+
+        test_br2_op_not_taken!(cpu, 0b101, 0, 1);
+        test_br2_op_not_taken!(cpu, 0b101, -1i32, 1);
+        test_br2_op_not_taken!(cpu, 0b101, -2i32, -1i32);
+        test_br2_op_not_taken!(cpu, 0b101, -2i32, 1);
+    }
+
+    #[test]
+    fn test_bltu() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_br2_op_taken!(cpu, 0b110, 0x00000000, 0x00000001);
+        test_br2_op_taken!(cpu, 0b110, 0xfffffffe, 0xffffffff);
+        test_br2_op_taken!(cpu, 0b110, 0x00000000, 0xffffffff);
+
+        test_br2_op_not_taken!(cpu, 0b110, 0x00000001, 0x00000000 );
+        test_br2_op_not_taken!(cpu, 0b110, 0xffffffff, 0xfffffffe );
+        test_br2_op_not_taken!(cpu, 0b110, 0xffffffff, 0x00000000 );
+        test_br2_op_not_taken!(cpu, 0b110, 0x80000000, 0x7fffffff );
+    }
+
+    #[test]
+    fn test_bgeu() {
+        let mut cpu = CPU::new(RAM::new(1024));
+
+        test_br2_op_taken!(cpu, 0b111, 0x00000000, 0x00000000);
+        test_br2_op_taken!(cpu, 0b111, 0x00000001, 0x00000001);
+        test_br2_op_taken!(cpu, 0b111, 0xffffffff, 0xffffffff);
+        test_br2_op_taken!(cpu, 0b111, 0x00000001, 0x00000000);
+        test_br2_op_taken!(cpu, 0b111, 0xffffffff, 0xfffffffe);
+        test_br2_op_taken!(cpu, 0b111, 0xffffffff, 0x00000000);
+
+        test_br2_op_not_taken!(cpu, 0b111, 0x00000000, 0x00000001);
+        test_br2_op_not_taken!(cpu, 0b111, 0xfffffffe, 0xffffffff);
+        test_br2_op_not_taken!(cpu, 0b111, 0x00000000, 0xffffffff);
+        test_br2_op_not_taken!(cpu, 0b111, 0x7fffffff, 0x80000000);
+    }
+}
