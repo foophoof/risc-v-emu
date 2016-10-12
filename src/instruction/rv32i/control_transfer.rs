@@ -116,7 +116,7 @@ impl Branch {
             0b100 => BranchType::LessThan,
             0b101 => BranchType::GreaterOrEqual,
             0b110 => BranchType::LessThanUnsigned,
-            0b011 => BranchType::GreaterOrEqualUnsigned,
+            0b111 => BranchType::GreaterOrEqualUnsigned,
             _ => return None,
         };
 
