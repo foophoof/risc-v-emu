@@ -63,4 +63,6 @@ fn main() {
 
     let mut cpu = CPU::new(ram);
     cpu.run(entry_point);
+
+    println!("result: {}", cpu.get_register(10));
 }

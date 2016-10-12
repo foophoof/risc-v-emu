@@ -39,18 +39,19 @@ impl CPU {
     }
 
     pub fn run(&mut self, entry_point: u32) {
+        self.set_register(1, 0); // Return address
         self.pc = entry_point;
 
         while let Some(instr) = self.get_instruction() {
             instr.execute(self);
             self.pc = self.pc.wrapping_add(4);
             self.csr.cycles = self.csr.cycles.wrapping_add(1);
+            if self.pc == 0 {
+                break;
+            }
             print!("{:?}\r", self);
         }
-
-        println!("last was: {:032b} (at {:08x})",
-                 self.ram.get_u32(self.pc),
-                 self.pc);
+        println!("");
     }
 
     fn get_instruction(&self) -> Option<Box<instruction::Instruction>> {
