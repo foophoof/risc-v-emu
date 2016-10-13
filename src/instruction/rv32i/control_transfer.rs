@@ -53,7 +53,7 @@ impl Jalr {
     pub fn parse(instruction: u32) -> Option<Jalr> {
         let decoded = encoding::I::parse(instruction);
 
-        if decoded.opcode != 0x6F {
+        if decoded.opcode != 0x67 {
             // Not a JALR opcode
             return None;
         }
