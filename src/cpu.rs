@@ -44,14 +44,13 @@ impl CPU {
 
         while let Some(instr) = self.get_instruction() {
             instr.execute(self);
+            println!("{:05X} {:?} {:08x}", self.pc, self, instr.to_raw());
             self.pc = self.pc.wrapping_add(4);
             self.csr.cycles = self.csr.cycles.wrapping_add(1);
             if self.pc == 0 {
                 break;
             }
-            print!("{:?}\r", self);
         }
-        println!("");
     }
 
     fn get_instruction(&self) -> Option<Box<instruction::Instruction>> {
