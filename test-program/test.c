@@ -5,6 +5,14 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
+int factorial(int input) {
+    if (input <= 1) {
+        return 1;
+    }
+
+    return input * factorial(input - 1);
+}
+
 int main() {
-    return 1 + 2 * 3 + 4;
+    return factorial(7);
 }
