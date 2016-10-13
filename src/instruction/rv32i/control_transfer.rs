@@ -40,6 +40,14 @@ impl Instruction for Jal {
         // run.
         cpu.pc = target.wrapping_sub(4);
     }
+
+    fn to_raw(&self) -> u32 {
+        encoding::UJ {
+            opcode: 0x6F,
+            rd: self.dest,
+            immediate: self.offset,
+        }.to_raw()
+    }
 }
 
 #[derive(Debug)]
@@ -80,6 +88,16 @@ impl Instruction for Jalr {
         // Subtract 4 since the CPU will increment by 4 after the instruction is
         // run.
         cpu.pc = target.wrapping_sub(4);
+    }
+
+    fn to_raw(&self) -> u32 {
+        encoding::I {
+            opcode: 0x67,
+            funct3: 0,
+            rd: self.dest,
+            rs1: self.base,
+            immediate: self.offset,
+        }.to_raw()
     }
 }
 
@@ -146,6 +164,23 @@ impl Instruction for Branch {
         if result {
             cpu.pc = cpu.pc.wrapping_add(self.offset as u32).wrapping_sub(4);
         }
+    }
+
+    fn to_raw(&self) -> u32 {
+        encoding::SB {
+            opcode: 0x63,
+            funct3: match self.typ {
+                BranchType::Equals => 0b000,
+                BranchType::NotEquals => 0b001,
+                BranchType::LessThan => 0b100,
+                BranchType::GreaterOrEqual => 0b101,
+                BranchType::LessThanUnsigned => 0b110,
+                BranchType::GreaterOrEqualUnsigned => 0b111,
+            },
+            rs1: self.src1,
+            rs2: self.src2,
+            immediate: self.offset,
+        }.to_raw()
     }
 }
 

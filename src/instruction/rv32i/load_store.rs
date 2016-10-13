@@ -66,6 +66,22 @@ impl Instruction for Load {
 
         cpu.set_register(self.dest, value);
     }
+
+    fn to_raw(&self) -> u32 {
+        encoding::I {
+            opcode: 0x03,
+            funct3: match self.typ {
+                LoadType::Byte => 0b000,
+                LoadType::HalfWord => 0b001,
+                LoadType::Word => 0b010,
+                LoadType::ByteUnsigned => 0b100,
+                LoadType::HalfWordUnsigned => 0b101,
+            },
+            rd: self.dest,
+            immediate: self.offset,
+            rs1: self.base,
+        }.to_raw()
+    }
 }
 
 #[derive(Debug)]
@@ -118,5 +134,19 @@ impl Instruction for Store {
             StoreType::HalfWord => cpu.ram.set_u16(addr, value as u16),
             StoreType::Word => cpu.ram.set_u32(addr, value),
         };
+    }
+
+    fn to_raw(&self) -> u32 {
+        encoding::S {
+            opcode: 0x23,
+            funct3: match self.typ {
+                StoreType::Byte => 0b000,
+                StoreType::HalfWord => 0b001,
+                StoreType::Word => 0b010,
+            },
+            immediate: self.offset,
+            rs1: self.base,
+            rs2: self.src,
+        }.to_raw()
     }
 }

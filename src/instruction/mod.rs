@@ -14,6 +14,7 @@ use cpu::CPU;
 
 pub trait Instruction: Debug {
     fn execute(&self, cpu: &mut CPU);
+    fn to_raw(&self) -> u32;
 }
 
 pub fn parse(instruction: u32) -> Option<Box<Instruction>> {

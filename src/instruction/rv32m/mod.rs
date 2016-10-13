@@ -110,6 +110,26 @@ impl Instruction for Op {
 
         cpu.set_register(self.dest, result);
     }
+
+    fn to_raw(&self) -> u32 {
+        encoding::R {
+            opcode: 0x33,
+            funct7: 1,
+            funct3: match self.typ {
+                OperationType::Mul => 0b000,
+                OperationType::MulHighSigned => 0b001,
+                OperationType::MulHighSignedUnsigned => 0b010,
+                OperationType::MulHighUnsigned => 0b011,
+                OperationType::Div => 0b100,
+                OperationType::DivUnsigned => 0b101,
+                OperationType::Remainder => 0b110,
+                OperationType::RemainderUnsigned => 0b111,
+            },
+            rd: self.dest,
+            rs1: self.operand1,
+            rs2: self.operand2,
+        }.to_raw()
+    }
 }
 
 #[cfg(test)]

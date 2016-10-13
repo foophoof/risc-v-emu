@@ -98,6 +98,26 @@ impl Instruction for OpImm {
                              }
                          });
     }
+
+    fn to_raw(&self) -> u32 {
+        encoding::I {
+            opcode: 0x13,
+            funct3: match self.typ {
+                ImmediateOperationType::Add => 0b000,
+                ImmediateOperationType::ShiftLeftLogical => 0b001,
+                ImmediateOperationType::SetLessThan => 0b010,
+                ImmediateOperationType::SetLessThanUnsigned => 0b011,
+                ImmediateOperationType::Xor => 0b100,
+                ImmediateOperationType::ShiftRightLogical => 0b101,
+                ImmediateOperationType::ShiftRightArithmetic => 0b101,
+                ImmediateOperationType::Or => 0b110,
+                ImmediateOperationType::And => 0b111,
+            },
+            rd: self.dest,
+            rs1: self.src,
+            immediate: self.immediate | if self.typ == ImmediateOperationType::ShiftRightArithmetic { 1 << 10 } else { 0 },
+        }.to_raw()
+    }
 }
 
 #[derive(Debug)]
@@ -177,6 +197,31 @@ impl Instruction for Op {
                              }
                          });
     }
+
+    fn to_raw(&self) -> u32 {
+        encoding::R {
+            opcode: 0x33,
+            funct3: match self.typ {
+                OperationType::Add => 0b000,
+                OperationType::Sub => 0b000,
+                OperationType::ShiftLeftLogical => 0b001,
+                OperationType::SetLessThan => 0b010,
+                OperationType::SetLessThanUnsigned => 0b011,
+                OperationType::Xor => 0b100,
+                OperationType::ShiftRightLogical => 0b101,
+                OperationType::ShiftRightArithmetic => 0b101,
+                OperationType::Or => 0b110,
+                OperationType::And => 0b111,
+            },
+            funct7: match self.typ {
+                OperationType::Sub | OperationType::ShiftRightArithmetic => 0x20,
+                _ => 0x00,
+            },
+            rd: self.dest,
+            rs1: self.src1,
+            rs2: self.src2,
+        }.to_raw()
+    }
 }
 
 #[derive(Debug)]
@@ -204,6 +249,14 @@ impl Lui {
 impl Instruction for Lui {
     fn execute(&self, cpu: &mut CPU) {
         cpu.set_register(self.dest, self.immediate);
+    }
+
+    fn to_raw(&self) -> u32 {
+        encoding::U {
+            opcode: 0x37,
+            rd: self.dest,
+            immediate: self.immediate as i32,
+        }.to_raw()
     }
 }
 
@@ -233,6 +286,14 @@ impl Instruction for Auipc {
     fn execute(&self, cpu: &mut CPU) {
         let result = cpu.pc.wrapping_add(self.immediate);
         cpu.set_register(self.dest, result);
+    }
+
+    fn to_raw(&self) -> u32 {
+        encoding::U {
+            opcode: 0x17,
+            rd: self.dest,
+            immediate: self.immediate as i32,
+        }.to_raw()
     }
 }
 
